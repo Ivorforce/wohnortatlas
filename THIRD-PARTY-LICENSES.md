@@ -353,7 +353,7 @@ redistributed in this repository; each is governed by its own license (the
 permissive BSD/MIT/Apache family, except r5py — GPL-3.0 — which is invoked as an
 external tool and not linked into distributed code):
 
-geopandas, pandas, shapely, pyarrow, h3, r5py, osmium (pyosmium), gtfsutils,
-rasterio, pyproj, scipy, requests, pyogrio, tqdm, openpyxl.
+geopandas, numpy, pandas, shapely, pyarrow, h3, r5py, osmium (pyosmium),
+gtfsutils, rasterio, pyproj, scipy, requests, pyogrio, tqdm.
 
 r5py drives Conveyal R5 (an external routing engine) for travel-time computation.

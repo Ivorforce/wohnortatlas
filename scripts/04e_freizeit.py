@@ -27,7 +27,7 @@ import pandas as pd
 from wohnen.config import LAYERS
 from wohnen.freizeit import (
     POINT_B, POINT_K, POINT_P, POINT_SIG, POINT_T0, SOURCES, point_reach)
-from wohnen.reach import gravity_sum
+from wohnen.reach import MODE_COLS, gravity_sum
 
 # --- going-out surfaces (from center MINUTES) -------------------------------
 # reach_activity (baseline): BROAD mass (culture+nightlife+gastro), LOCAL τ (15 min —
@@ -49,7 +49,6 @@ GOINGOUT = [  # (output prefix, mass columns, τ)
     ("reach_activity", ["ent_culture", "ent_nightlife", "ent_gastro"], ACTIVITY_TAU),
     ("reach_kultur", ["ent_culture", "ent_nightlife"], KULTUR_TAU),
 ]
-MODES = ["transit_hbf_min", "transit_bike_min", "bike_hbf_min", "car_hbf_min", "walk_min"]
 
 
 def _pctnorm(v):
@@ -66,7 +65,7 @@ def _load_centers():
     # keep the raw uint8 minutes (≥255 sentinel); gravity_sum masks ≥horizon per chunk,
     # so we never materialize 5 float64 (centers × cells) copies (~11 GB each → OOM as the
     # center count grows). transit = min over its two access legs, in uint8.
-    reach = {m: d[m] for m in MODES}
+    reach = {m: d[m] for m in MODE_COLS}
     modes_t = {"transit": np.minimum(reach["transit_hbf_min"], reach["transit_bike_min"]),
                "bike": reach["bike_hbf_min"], "foot": reach["walk_min"], "car": reach["car_hbf_min"]}
     centers = pd.read_parquet(LAYERS / "centers.parquet")

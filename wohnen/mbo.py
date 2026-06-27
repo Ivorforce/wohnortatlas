@@ -15,7 +15,9 @@ opportunity weight + per-cell native weight; the caller supplies the reach times
 
 import numpy as np
 
-HORIZON = 120.0    # 2 h ceiling (min) = the routed-time cap (TRAVEL_SENTINEL_MIN); O's horizon
+from wohnen.config import TRAVEL_SENTINEL_MIN
+
+HORIZON = float(TRAVEL_SENTINEL_MIN)    # 2 h ceiling (min) = the routed-time cap; O's horizon
 B_WINDOW = 25.0    # M/B come from the best opportunity within this commute (the app's min budget)
 NOR_CHUNK = 128    # centre-axis chunk for the noisy-OR product Π(1−term) (memory only)
 

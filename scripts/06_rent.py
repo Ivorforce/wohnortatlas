@@ -27,7 +27,6 @@ FACTOR_RANGE = (1.0, 2.2)
 
 KERNEL_SIGMA_KM = 1.5   # spatial bandwidth of the rent surface
 PRIOR_LAMBDA = 300.0    # prior strength: "pseudo-residents" at the Gemeinde mean
-RING_KM = 0.93          # center-to-center distance per res-8 ring
 
 # INKAR pay is Kreis-resolution -> a hard step at every Kreis border. Feather
 # it with a wide Gaussian so the city->suburb falloff reads as a gradient
@@ -49,7 +48,7 @@ def kernel_shrink(values: pd.Series, pop: pd.Series, prior: pd.Series,
     import h3 as h3lib
     data = {c: (v, pop.get(c, 0.0)) for c, v in values.items()
             if pd.notna(v) and pop.get(c, 0.0) > 0}
-    kern = [float(np.exp(-(r * RING_KM) ** 2 / (2 * KERNEL_SIGMA_KM ** 2)))
+    kern = [float(np.exp(-(r * RES8_STEP_KM) ** 2 / (2 * KERNEL_SIGMA_KM ** 2)))
             for r in range(k_max + 1)]
     result = {}
     for cell in values.index:

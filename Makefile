@@ -104,9 +104,9 @@ $(LAY)/reach_branche.npz: $(LAY)/reach_centers.npz $(LAY)/centers.parquet script
 	$(PY) scripts/04h_jobs.py
 jobs: $(LAY)/reach_branche.npz
 
-# reverse-route s_freizeit point sources (swim/kino/klettern/golf/segeln) → persist
+# reverse-route s_freizeit point sources (swim/kino/klettern/golf) → persist
 # reach_spots.npz (raw gravity sums). ~1 h horizon. JDK21 + valid GTFS like 04c.
-# 04d routes ONLY from freizeit_spots.parquet (the swim/kino/klettern/golf/segeln rows),
+# 04d routes ONLY from freizeit_spots.parquet (the swim/kino/klettern/golf rows),
 # NOT the full pois.parquet — so unrelated POI edits don't re-route (03b writes it content-
 # aware, so it only changes when those specific spots move).
 $(LAY)/reach_spots.npz: $(INT)/freizeit_spots.parquet $(INT)/region-filtered.osm.pbf $(INT)/gtfs_region.zip $(INT)/grid.parquet

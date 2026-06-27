@@ -18,7 +18,7 @@ from shapely import wkt as shapely_wkt
 from shapely.geometry import box
 
 from wohnen.config import BBOX, INTERIM, LAYERS, WORLDCOVER_S3
-from wohnen.h3util import RES8_STEP_KM, disk_gaussian_mean, points_to_cells
+from wohnen.h3util import disk_gaussian_mean, points_to_cells
 
 PX = 1 / 12000  # 10 m in degrees (WorldCover grid)
 CLASSES = {"tree": 10, "grass": 30, "crop": 40, "builtup": 50, "water": 80}

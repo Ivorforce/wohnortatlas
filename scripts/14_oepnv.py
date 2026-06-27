@@ -78,8 +78,6 @@ def main():
 
     cell_deps = deps.groupby(stop_cell).sum()
     sr = stop_routes.assign(cell=stop_routes["stop_id"].map(stop_cell))
-    cell_routes = sr.drop_duplicates(["cell", "route_id"]).groupby("cell")
-    cell_route_w = cell_routes["w"].sum()
     cell_route_sets = sr.drop_duplicates(["cell", "route_id"]).groupby("cell")[
         "route_id"].agg(set)
 

@@ -49,8 +49,8 @@ from wohnen.config import (
     LAYERS, INTERIM, CAR_CONGESTION, CAR_PARK_MIN, TRAVEL_SENTINEL_MIN,
 )
 from wohnen.reach import (
-    door_percentile, gather_window, honest_stop_times, load_egress, morton_order,
-    setup_decomp_net)
+    MODE_COLS, door_percentile, gather_window, honest_stop_times, load_egress,
+    morton_order, setup_decomp_net)
 
 # r5py is pulled in only when routing (setup_decomp_net → the JDK-21 assertion); set in
 # main. This script ONLY routes + persists the per-center×cell reach to reach_centers.npz;
@@ -58,7 +58,6 @@ from wohnen.reach import (
 _CTX = None      # decomposition context (net + r5py + matrix + jpype classes) — main
 _EGRESS = None   # {"walk": csr, "bike": csr, "erow": int[ncells]} — main
 
-MODES = ["transit_hbf_min", "transit_bike_min", "bike_hbf_min", "car_hbf_min", "walk_min"]
 HORIZON_MIN = TRAVEL_SENTINEL_MIN           # transit reach horizon (== the 255 sentinel)
 _TRANSIT_WORKERS = int(os.environ.get("REACH_TRANSIT_WORKERS", str(max(4, (os.cpu_count() or 8) - 2))))
 
@@ -139,7 +138,7 @@ def _to_uint8(reach: dict, cids, cell_ids) -> dict:
     >120 (transit already caps in the decomposition, car clips in route_centers) —
     breaking the clean ≤horizon-reachable / 255-beyond invariant the npz relies on."""
     arrs = {}
-    for m in MODES:
+    for m in MODE_COLS:
         a = reach[m].reindex(index=cids, columns=cell_ids).to_numpy(dtype=float)
         r = np.round(a)
         arrs[m] = np.where(np.isnan(a) | (r > TRAVEL_SENTINEL_MIN), 255, r).astype(np.uint8)
@@ -175,13 +174,13 @@ def _assemble(parts: Path, cids_all, cell_ids):
     frags = sorted(parts.glob("part_*.npz"))
     expect = cids_all.astype(str)
     pos = {str(c): i for i, c in enumerate(expect)}
-    merged = {m: np.full((len(expect), len(cell_ids)), 255, np.uint8) for m in MODES}
+    merged = {m: np.full((len(expect), len(cell_ids)), 255, np.uint8) for m in MODE_COLS}
     seen = 0
     for f in frags:
         d = np.load(f, allow_pickle=False)
         fids = d["center_ids"]
         rows = np.fromiter((pos[str(c)] for c in fids), dtype=int, count=len(fids))
-        for m in MODES:
+        for m in MODE_COLS:
             merged[m][rows] = d[m]
         seen += len(fids)
     assert seen == len(expect), \

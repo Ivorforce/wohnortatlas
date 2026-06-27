@@ -1516,7 +1516,7 @@ let showTargets = false; // map-pick mode: render the clickable city markers. Ar
 // — the gate's "Wenig pendeln" tightens it; manual edits / a restored budget re-derive
 // it as (budget − floor), so it is never serialized separately.
 let targetFloor = null;        // {bike,car,foot,oepnv} min minutes, Infinity if unreachable; null = no target
-let anbindungSlack = 60;       // budget headroom above the floor (min); 30 for "Wenig pendeln"
+let anbindungSlack = 60;       // budget headroom above the floor (min); household baseline (70 for Familie)
 const SLACK_MIN = 10, SLACK_MAX = 150;
 // commuter income floor (rentCeilAt, pay mode): with a specific city target you earn THAT
 // city's wage even living in a cheaper outer Kreis, so the rent ceiling there is judged on
@@ -2099,7 +2099,6 @@ const ACCESS_PREF = {  // defaults; personas tune via the gate. Nahversorgung
 // so a typing gap dings the score instead of hiding the cell; the monthly amenities
 // (Apotheke/Arzt/Zahnarzt) only ding the score, never veto. The Nahversorgung
 // 3-state shifts where the food veto bites (muss = walkable-only).
-const essentialsPass = new Uint8Array(N);  // 1 = passes all active essentials
 const essFoodPass = new Uint8Array(N);     // 1 = Nahversorgung ok (food veto not tripped)
 const essSchoolPass = new Uint8Array(N);   // 1 = all active school needs reachable
 // Leisure veto: a TICKED s_freizeit source (Ausgehen/Kino/Schwimmen/…) stays a weight
@@ -2370,7 +2369,7 @@ function layerFloor(L) {
 function recomputeAccess() {
   Ldirty.add("s_access");
   const sel = ACCESS_LAYERS.filter(L => ACCESS_PREF[L.key] !== "egal");
-  if (!sel.length) { S.s_access.fill(1); essentialsPass.fill(1); essFoodPass.fill(1); essSchoolPass.fill(1); return; }
+  if (!sel.length) { S.s_access.fill(1); essFoodPass.fill(1); essSchoolPass.fill(1); return; }
   let wsum = 0;
   const items = sel.map(L => {
     const w = ACCESS_WEIGHT[ACCESS_PREF[L.key]] ?? 1; wsum += w;
@@ -2382,17 +2381,15 @@ function recomputeAccess() {
   for (const it of items) afLg += it.w * Math.log(af + span * layerFloor(it.L));
   const aAf = Math.exp(afLg / wsum), aSpan = 1 - aAf;
   for (let i = 0; i < N; i++) {
-    let lg = 0, pass = 1, food = 1, school = 1;
+    let lg = 0, food = 1, school = 1;
     for (const it of items) {
       const { s, veto } = layerScore(it.L, it.state, i);
       if (veto) {                               // a required amenity unreachable → unsuitable
-        pass = 0;
         if (it.L.key === "nahversorgung") food = 0; else school = 0;
       }
       lg += it.w * Math.log(af + span * s);
     }
     S.s_access[i] = acc01((Math.exp(lg / wsum) - aAf) / aSpan);
-    essentialsPass[i] = pass;
     essFoodPass[i] = food;
     essSchoolPass[i] = school;
   }
@@ -2790,7 +2787,6 @@ function applyHideWorst() {
 // OKLab lightness range toward its bright end (hue/chroma untouched) so
 // the dark colors still multiply legibly: 0 = plain, 0.5 = half range.
 const VIRIDIS = [[68,1,84],[65,68,135],[42,120,142],[34,168,132],[122,209,81],[253,231,37]];
-const PLASMA = [[13,8,135],[106,0,168],[177,42,144],[225,100,98],[252,166,54],[240,249,33]];
 const STOP_LABS = VIRIDIS.map(srgb2oklab);
 const L_COMPRESS = 0.4;
 // Score views are an absolute utility in [0,1] (re-anchored against the floor in
@@ -5228,15 +5224,13 @@ function updateSoloDim() {
   for (const [k, row] of sliderRows)
     row.classList.toggle("dim", solo.size > 0 && !solo.has(k));
 }
-// sub-header for grouped slider sub-controls. dimKey ties it to a layer's solo
-// dimming; omit it for global controls that should stay readable under solo.
-function subHdr(txt, dimKey, tip) {
+// sub-header for grouped slider sub-controls.
+function subHdr(txt, tip) {
   const d = document.createElement("div");
   d.className = "row";
   d.style.cssText = "margin:3px 0 0 22px;font-size:11px;opacity:.6";
   d.textContent = txt;
   if (tip) { d.title = tip; d.style.cursor = "help"; }
-  if (dimKey) sliderRows.push([dimKey, d]);
   slidersDiv.appendChild(d);
 }
 
@@ -5263,7 +5257,7 @@ const modeOpts = sel => `
     <option value="nicht"${sel == null || sel === "nicht" ? " selected" : ""}>Gar nicht</option>
     <option value="koennen"${sel === "koennen" ? " selected" : ""}>Wenn nötig</option>
     <option value="gern"${sel === "gern" ? " selected" : ""}>Gerne</option>`;
-subHdr("Verkehrsmittel – was kommt für dich infrage?", null,
+subHdr("Verkehrsmittel – was kommt für dich infrage?",
   "Womit du unterwegs bist, bestimmt, was als „erreichbar“ zählt. »Gerne« zählt voll, "
   + "»Wenn nötig« mit kleinem Zeitaufschlag, »Gar nicht« lässt das Verkehrsmittel weg. "
   + "Zu Fuß zählt immer mit, ganz ohne Auswahl.");

@@ -47,7 +47,7 @@ function decodePayload(bytes) {
   const TYPES = { u8: Uint8Array, u16: Uint16Array, u32: Uint32Array };
   const SENT = { u8: 255, u16: 65535, u32: 4294967295 };
   const align = o => (o + 3) & ~3;
-  const cells = { scores: {}, raw: {}, pct: {} };
+  const cells = { scores: {}, raw: {} };
   let off = align(8 + hlen), h3hi, h3lo;
   for (const c of head.cols) {
     const T = TYPES[c.dtype];

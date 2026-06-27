@@ -19,6 +19,21 @@ import numpy as np
 
 from wohnen.config import INTERIM, LAYERS
 
+# Per-mode reach columns of reach_centers.npz, in ship order. This list IS the npz
+# schema — 04c writes it, 04e/04f/04h read it, 22 packs it; they must agree or the web
+# binary silently desyncs. walk_min stays LAST so a 4-mode web chunk built before foot
+# existed still decodes (decodeTarget infers the count); keep in sync with web/decode.js.
+MODE_COLS = ["transit_hbf_min", "transit_bike_min", "bike_hbf_min", "car_hbf_min", "walk_min"]
+
+# client mode -> the npz column(s) whose MIN drives that mode's decay (transit picks the
+# better of walk-access / bike-egress). Shared by the M/B/O derivations (04f, 04h).
+MODE_DECAY = {
+    "bike": ["bike_hbf_min"],
+    "car": ["car_hbf_min"],
+    "walk": ["walk_min"],
+    "transit": ["transit_hbf_min", "transit_bike_min"],
+}
+
 _t04 = None
 
 
@@ -41,9 +56,9 @@ def load_r5():
 # (buildDistanceTables OOMs otherwise). FastRaptorWorker never reads those tables
 # (validated bit-identical with them cleared), so this is lossless for the raptor.
 #
-# ALL transit reach now decomposes (04c + 04d; the legacy fixed-anchor base layer is
-# gone), so nothing needs the egress tables — setup_decomp_net applies the skip + the
-# dedicated table-less cache uniformly for every routing script. The net is kept in a
+# ALL transit reach decomposes (04c + 04d), so nothing needs the egress tables —
+# setup_decomp_net applies the skip + the dedicated table-less cache uniformly for
+# every routing script. The net is kept in a
 # SEPARATE cache dir (not the default ~/.cache/r5py) so a table-less build never gets
 # served to some future r5py consumer that *does* want full egress.
 DECOMP_CACHE = Path.home() / ".cache" / "wohnortatlas-r5-noegress"

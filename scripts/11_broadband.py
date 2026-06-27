@@ -11,7 +11,6 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-import geopandas as gpd
 import pandas as pd
 import pyogrio
 

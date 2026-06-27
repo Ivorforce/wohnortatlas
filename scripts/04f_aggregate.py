@@ -38,6 +38,7 @@ import pandas as pd
 from wohnen.cityness import cityness_o
 from wohnen.config import LAYERS, TRAVEL_SENTINEL_MIN
 from wohnen.mbo import decay as mbo_decay, mbo_triple
+from wohnen.reach import MODE_COLS, MODE_DECAY
 
 SENTINEL = 255        # reach_centers.npz uint8 no-reach marker
 PCT_CITY = 0.50       # catchment-weighted percentile for whole-city reach: the shipped
@@ -47,18 +48,7 @@ PCT_CITY = 0.50       # catchment-weighted percentile for whole-city reach: the 
                       # center-vs-suburb gradient but reads as "the typical Münchner is
                       # T min away". Lower (p30) drifts back toward rewarding edge-hugging.
 
-# client mode -> (npz column(s) whose MIN drives that mode's decay, columns to SHIP).
-# transit picks its best city by the better of walk-access / bike-egress, and ships
-# both so the web's access-leg logic (recomputeAnbindung) still chooses between them.
-MODES = {
-    "bike": (["bike_hbf_min"], ["bike_hbf_min"]),
-    "car": (["car_hbf_min"], ["car_hbf_min"]),
-    "walk": (["walk_min"], ["walk_min"]),
-    "transit": (["transit_hbf_min", "transit_bike_min"], ["transit_hbf_min", "transit_bike_min"]),
-}
-TIERS = {"any": "o_any", "gross": "o_gross"}
-# the five raw per-mode columns shipped per city/part target (kept = 22_build_web's REACH_MODES)
-MODE_COLS = ["transit_hbf_min", "transit_bike_min", "bike_hbf_min", "car_hbf_min", "walk_min"]
+TIERS = ("any", "gross")
 
 
 def slugify(name):
@@ -172,7 +162,7 @@ def main():
     # so retuning the smoothstep needs only a 04f rerun, no 04b/re-route.
     center_cat = centers["catchment_pop"].reindex(cids).fillna(0.0).to_numpy(float)
     cy = {}                                                  # f"{tier}_{m|b|o}_{mode}" -> (N,) u8
-    for mode, (decay_cols, _ship) in MODES.items():
+    for mode, decay_cols in MODE_DECAY.items():
         t = np.minimum.reduce([U[c] for c in decay_cols])
         dk = mbo_decay(t)
         for tier in TIERS:
@@ -252,7 +242,7 @@ def main():
     cities.to_parquet(LAYERS / "cities.parquet", index=False)
     parts.to_parquet(LAYERS / "parts.parquet", index=False)
 
-    print(f"wrote reach_cityness.npz ({N} cells, M/B/O × {len(MODES)} modes); "
+    print(f"wrote reach_cityness.npz ({N} cells, M/B/O × {len(MODE_DECAY)} modes); "
           f"car-present any/gross = {cov['any']}/{cov['gross']}")
     print(f"wrote reach_cities.npz ({cities.shape[0]} cities, p{int(PCT_CITY * 100)} "
           f"catchment-weighted, uint8 matrix), cities.parquet, reach_parts.npz/parts.parquet "

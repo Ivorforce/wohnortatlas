@@ -33,6 +33,7 @@ import numpy as np
 import pandas as pd
 
 from wohnen.config import LAYERS, WEB, DATA, BBOX, JOBS_BUCKET_LABELS
+from wohnen.reach import MODE_COLS as REACH_MODES   # shipped per-mode chunk order (npz schema)
 
 # Score layers shipped to the web, in display order. This list is PURELY data:
 # which scores.parquet columns are factor layers and in what order they appear.
@@ -152,12 +153,6 @@ def encode_raw(name, vals, dec):
         meta = {"dec": dec}
     out[ok] = np.clip(np.round(code), 0, 254).astype(np.uint8)
     return meta, out
-
-
-# walk_min LAST: a chunk built before foot existed had 4 modes ending in car_hbf_min;
-# keeping the first four in place + appending walk lets the client decode old and new
-# chunks the same way (decodeTarget infers the count). Keep in sync with web/decode.js.
-REACH_MODES = ["transit_hbf_min", "transit_bike_min", "bike_hbf_min", "car_hbf_min", "walk_min"]
 
 
 def _colmap(npz, order):

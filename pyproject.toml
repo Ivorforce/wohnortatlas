@@ -8,6 +8,7 @@ packages = [{ include = "wohnen" }]
 [tool.poetry.dependencies]
 python = "^3.12"
 geopandas = "^1.0"
+numpy = "^2.0"
 pandas = "^2.2"
 shapely = "^2.0"
 pyarrow = "^19.0"
@@ -21,7 +22,6 @@ scipy = "^1.14"
 requests = "^2.32"
 pyogrio = "^0.10"
 tqdm = "^4.66"
-openpyxl = "^3.1"
 
 [build-system]
 requires = ["poetry-core"]

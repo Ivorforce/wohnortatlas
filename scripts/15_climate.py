@@ -8,7 +8,6 @@ meaningful when the map grows. Temperature/snow ship raw only — genuine
 preferences, not qualities.
 """
 
-import gzip
 import sys
 from pathlib import Path
 

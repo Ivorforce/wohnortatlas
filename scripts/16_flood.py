@@ -101,7 +101,6 @@ def main():
         dep[(d[rows, cols] == nd) | (dep < 0)] = 0.0
         base[f"d{rp}"] = dep
 
-    g = base.groupby("h3")
     idx = grid["h3"]
     frac = pd.DataFrame(index=idx)
     mdepth = pd.DataFrame(index=idx)

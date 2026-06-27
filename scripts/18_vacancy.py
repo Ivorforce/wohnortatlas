@@ -25,7 +25,6 @@ decline (full penalty). dl-de/by-2-0; attribute Statistische Ämter / Zensus 202
 """
 
 import sys
-import zipfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))

@@ -14,7 +14,6 @@ CACHE = RAW / "cache"
 BBOX = (5.8, 47.2, 15.1, 55.1)
 H3_RES = 8
 
-EBIKE_KMH = 18.0
 BIKE_KMH = 15.0  # school runs (kids)
 WALK_KMH = 4.5
 DETOUR_FACTOR = 1.3
@@ -34,10 +33,6 @@ CAR_PARK_MIN = 6.0
 #    resident's nearest option closer than the single nearest-to-centre.
 CELL_RMS_M = 338.0
 TRAVEL_SENTINEL_MIN = 120
-
-# rent score anchors (€/m² cold, ~100 m² flat): <=RENT_IDEAL -> 1.0, >=RENT_MAX -> 0.0
-RENT_IDEAL = 10.0
-RENT_MAX = 15.5
 
 URLS = {
     "osm_germany": "https://download.geofabrik.de/europe/germany-latest.osm.pbf",

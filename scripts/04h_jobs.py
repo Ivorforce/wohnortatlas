@@ -41,6 +41,7 @@ from wohnen.config import BBOX, INTERIM, JOBS_BUCKETS, LAYERS, RAW
 from wohnen.genesis import fetch_jobs_kreis
 from wohnen.io import write_parquet_if_changed
 from wohnen.mbo import decay as mbo_decay, mbo_triple   # shared M/B/O derivation (also 04f)
+from wohnen.reach import MODE_COLS, MODE_DECAY
 
 SENTINEL = 255
 # Field-strength O = blend of ABSOLUTE opportunity and SPECIALISATION (see combine_o). The
@@ -62,14 +63,6 @@ NATIVE_FEATHER_KM = 2.5  # Gaussian feather of the native sector surfaces across
                          # after) is preserved. Tighter than pay's 6 km — jobs concentrate more
                          # sharply than wage levels.
 
-# client mode -> (npz columns whose MIN drives the decay, columns to SHIP) — verbatim 04f.
-MODES = {
-    "bike": (["bike_hbf_min"], ["bike_hbf_min"]),
-    "car": (["car_hbf_min"], ["car_hbf_min"]),
-    "walk": (["walk_min"], ["walk_min"]),
-    "transit": (["transit_hbf_min", "transit_bike_min"], ["transit_hbf_min", "transit_bike_min"]),
-}
-MODE_COLS = ["transit_hbf_min", "transit_bike_min", "bike_hbf_min", "car_hbf_min", "walk_min"]
 O_MODES = ["transit", "bike", "walk", "car"]  # the 4 gate columns shipped per sector
 
 
@@ -221,7 +214,7 @@ def main():
     Mm = {m: np.full((B, N), 255, np.uint8) for m in O_MODES}
     Bm = {m: np.full((B, N), 255, np.uint8) for m in O_MODES}
     Om = {m: np.full((B, N), 255, np.uint8) for m in O_MODES}
-    for mode, (decay_cols, _ship) in MODES.items():
+    for mode, decay_cols in MODE_DECAY.items():
         t = np.minimum.reduce([U[c] for c in decay_cols])               # (C, N) uint8 door-to-door
         dk = mbo_decay(t)
         for bi, key in enumerate(keys):
