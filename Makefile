@@ -10,7 +10,7 @@ LAY := data/layers
 # shell-out only happens when a recipe actually uses it)
 BBOX_CSV = $(shell python3 -c "from wohnen.config import BBOX; print(','.join(map(str, BBOX)))")
 
-.PHONY: all check-env download web publish clean-layers jobs
+.PHONY: all check-env download web publish clean-layers jobs freshness
 
 all: web
 

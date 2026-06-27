@@ -43,7 +43,6 @@ from wohnen.io import write_parquet_if_changed
 from wohnen.mbo import decay as mbo_decay, mbo_triple   # shared M/B/O derivation (also 04f)
 from wohnen.reach import MODE_COLS, MODE_DECAY
 
-SENTINEL = 255
 # Field-strength O = blend of ABSOLUTE opportunity and SPECIALISATION (see combine_o). The
 # client uses it as a LINEAR gradient multiplier (NOT the cityness anbindungGate), so a
 # sector pick gives a real hub→rural gradient AND different sectors give DIFFERENT maps
