@@ -1,0 +1,17 @@
+data/
+web/data.bin
+web/reach/
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+.idea/
+
+# AI / planning / reference docs — all local-only, never public
+CLAUDE.md
+.claude/
+docs/
+
+# throwaway design-exploration tool + its output (kept local)
+scripts/make_favicon_candidates.py
+assets/favicon-candidates/

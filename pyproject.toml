@@ -1,0 +1,28 @@
+[tool.poetry]
+name = "wohnen"
+version = "0.1.0"
+description = "Germany-wide livability scoring pipeline + interactive map"
+authors = ["Lukas Tenbrink <lukas.tenbrink@gmail.com>"]
+packages = [{ include = "wohnen" }]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+geopandas = "^1.0"
+pandas = "^2.2"
+shapely = "^2.0"
+pyarrow = "^19.0"
+h3 = "^4.0"
+r5py = "^1.1"
+osmium = "^4.0"
+gtfsutils = "^0.2"
+rasterio = "^1.4"
+pyproj = "^3.7"
+scipy = "^1.14"
+requests = "^2.32"
+pyogrio = "^0.10"
+tqdm = "^4.66"
+openpyxl = "^3.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

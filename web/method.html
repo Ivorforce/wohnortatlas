@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Methode &amp; Grenzen — Deutscher Wohnortatlas</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="favicon.ico" sizes="32x32">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+  html, body { margin: 0; background: #f4f3f1;
+    font: 15px/1.6 -apple-system, system-ui, sans-serif; color: #1b1d26; }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 32px 22px 64px; }
+  h1 { font-size: 26px; margin: 0 0 4px; }
+  .lede { color: #555; font-size: 15px; margin: 0 0 26px; }
+  h2 { font-size: 19px; margin: 34px 0 8px; padding-top: 18px;
+    border-top: 1px solid #ddd; }
+  h3 { font-size: 15px; margin: 18px 0 2px; }
+  p { margin: 8px 0; }
+  a { color: #c05f2e; }
+  .back { display: inline-block; margin-bottom: 18px; font-size: 13px; }
+  .layer { margin: 4px 0 12px; }
+  ul { margin: 8px 0; padding-left: 22px; }
+  li { margin: 4px 0; }
+  .src-list li { font-size: 13px; color: #333; margin: 9px 0; }
+  .src-list .uses { display: block; margin-top: 1px; color: #888; font-size: 12px; }
+  footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid #ddd;
+    color: #888; font-size: 12.5px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="index.html">← zurück zur Karte</a>
+  <h1>Methode &amp; Grenzen</h1>
+  <p class="lede">Hintergrundinformationen zum Projekt, Methodik, Limitationen und Quellen.</p>
+
+  <h2>Was macht diese Software? Wofür ist sie gut?</h2>
+  <p>Diese Karte bewertet Wohnorte anhand von ein paar Dutzend verschiedener Ebenen.
+    Diese sind ausgewählt durch 3 Prinzipien: Sie sollten die Lebensqualität
+    spürbar beeinflussen, sie sollten wichtig sein für die Wahl der Wohnlage, und sie
+    sollten messbar sein.</p>
+
+  <p>Ebenen zu finden, die alle Prinzipien erfüllen, ist gar nicht mal so einfach.
+    Was du in dieser Karte findest, ist praktisch eine Interpretation von
+    öffentlich gesammelten Daten, und kann durch verschiedene Faktoren falsch
+    liegen: Beispielsweise können die Quelldaten ungenau sein, die intendierte
+    Lebensqualität schlecht repräsentieren, oder es fehlt ein Faktor, der Dir wichtig ist.
+    Betrachte also die Vorschläge mehr als eine Vorauswahl anhand deiner Präferenzen, nicht
+    als finales Urteil.</p>
+
+  <p>Standardmäßig fließt zusätzlich zu deinen Auswahlen unsere <b>ausgewogene
+    Standardgewichtung für Lebensqualität</b> ein — eine bewusste Gewichtung von oft
+    übersehenen Qualitäten (Ruhe, Grün, erreichbare Natur, Ortsbild …), die der Markt
+    kaum einpreist. Das ist unsere Interpretation, kein Naturgesetz: Im Fragebogen
+    kannst du sie abwählen, dann zählen <b>nur deine eigenen Auswahlen</b> (etwa nur
+    Miete, oder Miete plus „Grünes Viertel“). Getrennt davon steht das
+    <b>Hochwasserrisiko</b> als eigene, ebenfalls standardmäßig aktive Einstellung —
+    eine Lage-Eigenschaft, die du beim Besichtigen nicht siehst; auch sie ist abwählbar.</p>
+
+  <p>Wie genau die Ebenen in dieser Karte aufgebaut sind, erfährst du weiter unten auf dieser Seite.</p>
+
+  <h2>Wie diese Software entstand</h2>
+
+  <p>Der Entwickler dieses Projektes bin ich, Lukas Tenbrink — ein Datenwissenschaftler und Programmierer aus München.
+    Ich habe die Software ursprünglich aufgebaut, um meiner Freundin und mir eine schöne Lage für eine gemeinsame Wohnung zu finden.
+    Die Daten zu sammeln war nicht mal schwer, aber sie nutzbar zusammen zu bauen hat mich dann doch mehr Zeit gekostet
+    als ursprünglich gehofft. Aber nach einiger Arbeit war ich dann doch irgendwann zufrieden, und wir hatten ein paar
+    Kandidaten :)</p>
+  <p>Als ich Freunden davon erzählte, stellte sich heraus, dass wir wohl nicht die Einzigen auf der Wohnungssuche sind. Also
+    habe ich noch mal ein bisschen mehr Zeit reingesteckt und die Karte auf hochglanz poliert, damit ich sie auch hochladen
+    kann. Naja, und jetzt bist Du hier!
+  </p>
+  <p>Ich baue diese Software in meiner Freizeit, und biete sie kostenlos an. Wenn Du die Entwicklung unterstützen möchtest,
+    besuche gerne <a href="https://github.com/sponsors/Ivorforce/">meine Sponsorseite auf GitHub</a>! &lt;3
+  </p>
+
+  <h2>Die Ebenen</h2>
+  <p>Was jede Ebene misst, woraus — und wo sie an ihre Grenze stößt. Wie du eine
+  Ebene einstellst und gewichtest, steht im Tooltip ihres Reglers auf der Karte.</p>
+
+  <div class="layer"><h3>Miete (Bezahlbarkeit)</h3>
+    <p>Geschätzte Kaltmiete bei Neuanmietung gegen dein Budget. Grundlage sind die
+    Mieten aus dem Zensus 2022, je Gemeinde auf das heutige Marktniveau hochgerechnet —
+    diese Hochrechnung teils nur auf Kreisebene, also lokal grob. Voll gewertet,
+    solange die Miete bequem in deinem Budget liegt; je näher sie an deine Obergrenze
+    rückt, desto steiler fällt der Wert. Lagen klar über dem Budget kannst du auf Wunsch
+    ganz ausblenden.</p></div>
+
+  <div class="layer"><h3>Anbindung</h3>
+    <p>Routing mit deinen Verkehrsmitteln zu deinem Lebensmittelpunkt, Tür zu Tür
+    samt Wartezeit, über Fahrplandaten (gtfs.de) und das Straßennetz von
+    OpenStreetMap. Es zählt der beste deiner Wege; weitere geben nur Bonus. Das Ziel
+    wählst du selbst: eine bestimmte Stadt, oder du richtest dich nach dem Beruf —
+    »Alle Branchen (Stadt/Großstadt)« wenn dir das Feld egal ist (die beste erreichbare,
+    gewichtet nach Größe), oder eine bestimmte Branche, dann zählt, wie gut du Orte
+    erreichst, an denen dein Berufsfeld besonders stark ist.</p></div>
+
+  <div class="layer"><h3>ÖPNV vor Ort</h3>
+    <p>Wie gut der Ort an Bus &amp; Bahn liegt, zielunabhängig. Aus Abfahrten pro Tag
+    und Linienvielfalt in Laufweite (Fahrplandaten gtfs.de), S-Bahn, U-Bahn und Tram
+    doppelt gezählt. Misst das Angebot, nicht ob es dich an dein Ziel bringt.</p></div>
+
+  <div class="layer"><h3>In der Nähe</h3>
+    <p>Erreichbarkeit von sechs Kategorien des täglichen Bedarfs, von Nahversorgung
+    bis Schule (Daten: OpenStreetMap; Schularten amtlich aus den
+    Länder-Schulverzeichnissen via JedeSchule). Je Kategorie wählst du, wie nah es
+    sein muss; gewertet wird der Weg zum nächsten Angebot.</p>
+    <ul>
+      <li><b>Essen:</b> ein Supermarkt oder kleiner Laden zählt voll; Bäcker,
+      Metzger und Hofladen füllen die tägliche Lücke, ersetzen aber keinen vollen
+      Einkauf und zählen daher nur gedeckelt — ein Kiosk gilt nicht als
+      Lebensmittelversorgung.</li>
+      <li><b>Gesundheit:</b> Apotheke, Arzt und Zahnarzt fließen als Faktoren ein,
+      schließen einen Ort aber nie aus.</li>
+      <li><b>KiTa &amp; Grundschule:</b> es zählt vor allem der Fußweg des Kindes —
+      ist es zu weit, bringst du es selbst (mit Abzug); »Direkt vor Ort« verlangt
+      Fußnähe ohne Fahren. Knappes Platzangebot (Wartelisten) senkt den Wert
+      zusätzlich.</li>
+      <li><b>Weiterführende Schule:</b> erreicht das Kind allein, mit Rad oder
+      Schulbus; jede Schulform zählt einzeln (eine Realschule ersetzt kein
+      Gymnasium).</li>
+    </ul>
+    <p>Misst Erreichbarkeit, nicht Qualität.</p></div>
+
+  <div class="layer"><h3>Freizeit &amp; Kultur</h3>
+    <p>Wie gut du Freizeit und Kultur erreichst — nicht direkt vor der Tür, sondern
+    als Abend- oder Wochenendweg von etwa 15 bis 20 Minuten mit deinen Verkehrsmitteln.
+    Grundlage ist, wie viel rundherum los ist (Ausgeh-, Kultur- und Gastroszene;
+    Daten: OpenStreetMap), erreichbar gerechnet über Fahrplan- und Straßennetz wie
+    bei der Anbindung. Mehr und Näheres zählt mehr; eine Großstadt in Reichweite
+    schlägt das einzelne Wirtshaus.</p>
+    <p>Darunter hakst du an, was dir wichtig ist — Ausgehen &amp; Kultur, Kino,
+    Schwimmen, Klettern oder Golf. Eine angehakte Aktivität wird zur
+    Bedingung: ist sie gar nicht erreichbar, blendet »Ungeeignete ausblenden« den
+    Ort aus. Misst Erreichbarkeit, nicht Qualität — und OpenStreetMap kann Angebote
+    übersehen.</p></div>
+
+  <div class="layer"><h3>Grünes Viertel</h3>
+    <p>Wie grün die nähere Umgebung ist (etwa 500 m). Aus Satellitendaten (ESA
+    WorldCover) für Bäume, Wiesen und Wasser, ergänzt um Stadtgrün aus OpenStreetMap
+    (Parks, Alleen), das der Satellit zwischen Häusern übersieht. Private Gärten in
+    Villenvierteln werden nicht gewertet.</p></div>
+
+  <div class="layer"><h3>Ruhe</h3>
+    <p>Aus amtlichen Lärmkarten (EU-Umgebungslärm; Umweltbundesamt und Eisenbahn-Bundesamt)
+    für Straßen-, Bahn- und Fluglärm, akustisch zusammengezählt. Kleine Straßen unter
+    der Kartierungsschwelle werden grob über ihre Nähe geschätzt, dichte Bebauung erhöht
+    den Wert zusätzlich (diffuser Stadtlärm); Industrie- und Tramlärm fehlen.</p></div>
+
+  <div class="layer"><h3>Natur erreichbar</h3>
+    <p>Ob du mit dem Rad schnell ins Grüne kommst — gewertet wird der beste
+    erreichbare Ort: Wald, See, Fluss, Hügel oder Aussichtspunkt (Satellitendaten,
+    Geländemodell, OpenStreetMap). Näheres zählt mehr, ein großes zusammenhängendes
+    Naturgebiet mehr als ein einzelner kleiner Fleck. Hügelige Natur zählt etwas
+    mehr, vielbesuchte etwas weniger — der Andrang an berühmten Seen ist aber nicht
+    erfasst.</p></div>
+
+  <div class="layer"><h3>Hochwassersicherheit</h3>
+    <p>Aus europaweiten Hochwasser-Tiefenkarten (JRC/Copernicus) für mehrere
+    Wiederkehrzeiten (alle 10 bis 500 Jahre) — eine Risiko-Schätzung „wie oft × wie
+    tief". Ein seltenes, aber existenzielles Risiko: Hochwasser tötet kaum jemanden,
+    kann aber die ganze Wohnung zerstören. Nur Flüsse mit größerem Einzugsgebiet sind
+    modelliert (kleine Bäche und Starkregen fehlen), Deiche bleiben unberücksichtigt
+    (geschützte Ufer zeigen Restgefahr); fehlende Daten heißen hier „sicher".</p></div>
+
+  <div class="layer"><h3>Wenig Leerstand</h3>
+    <p>Wie stabil ein Ort ist, statt zu veröden — aus dem Anteil leerstehender
+    Wohnungen (Zensus 2022). Hoher Leerstand deutet auf wegziehende, verfallende
+    Gegenden hin; das ist das Signal, das die Miete allein nicht trägt (günstig kann
+    heißen ländlich-bezahlbar oder ausblutend). Gewertet wird die Bausubstanz, nicht
+    die Menschen. Verlässlich erst auf dem 1-km-Raster; in ländlichen
+    Einfamilienhaus-Gegenden gibt es keinen Wert (zählt dort neutral, hebt und senkt
+    nichts) — kein Ausschluss.</p></div>
+
+  <div class="layer"><h3>Ortsbild</h3>
+    <p>Aus historischen Objekten (Burgen, Stadtmauern,
+    Kapellen …), öffentlicher Kunst und einer gewachsenen, organischen Straßenführung
+    (OpenStreetMap) — eine verwinkelte Altstadt zählt mehr als ein Reißbrett-Raster.
+    Schon eines davon reicht; ein Kunstviertel zählt wie eine Altstadt. Pro Einwohner
+    gewertet, damit kleine historische Städte mithalten. Misst Vorhandensein, nicht
+    Schönheit; OpenStreetMap ist auf dem Land lückenhaft.</p></div>
+
+  <div class="layer"><h3>Schnelles Internet</h3>
+    <p>Anteil der Haushalte mit verfügbarem schnellem Internet — ab 100 Mbit/s als
+    ausreichende Schwelle, plus Bonus für Gigabit und Glasfaser (Breitbandatlas der
+    Bundesnetzagentur). Zählt die Verfügbarkeit, nicht den real gebuchten Anschluss;
+    der Glasfaser-Ausbau ist blockweise lückig.</p></div>
+
+  <div class="layer"><h3>Sonne &amp; Trockenheit</h3>
+    <p>Mehr Sonne, weniger Regen — langjähriges Mittel (1991–2020) des Deutschen
+    Wetterdiensts. Temperatur und Schneetage sind Geschmackssache und darum nicht
+    gewertet, sondern nur als Info im Karten-Tooltip.</p></div>
+
+  <div class="layer"><h3>Wohnform &amp; Alter im Viertel</h3>
+    <p>Zwei Vorlieben, keine Qualitäten (Daten: Zensus 2022): wie nah Bebauungsdichte
+    und Durchschnittsalter der Nachbarschaft an deinen Wünschen liegen. Die Dichte
+    zählt je km² bewohnter Fläche, nicht je Wabe (so heißen die Sechsecke der Karte),
+    damit der bebaute Stadtrand nicht als Land durchgeht. Beide bewerten nur die
+    Vorliebe — was Dichte im Alltag bedeutet, wird in anderen Ebenen gemessen.</p></div>
+
+  <h2>Was die Karte nicht bewertet — und warum</h2>
+  <p>Diese Lücken sind Absicht. Eine Ebene kommt nur dann hinzu, wenn sie sich fair
+  und flächendeckend messen lässt.</p>
+  <ul>
+    <li><strong>Jobs &amp; Arbeitsmarkt:</strong> nur teilweise. Wo eine passende
+      Stadt oder deine Branche liegt, deckt der »Lebensmittelpunkt« ab (siehe oben).
+      Ungemessen bleibt der eigentliche Arbeitsmarkt: welche Stellen real frei sind
+      und zu welchem Lohn — die Karte zeigt, wo dein Feld stark ist, nicht ob gerade
+      eingestellt wird.</li>
+    <li><strong>Menschen &amp; Milieu, Schulqualität:</strong> nicht sinnvoll und
+      nicht fair flächendeckend messbar.</li>
+    <li><strong>Luftqualität:</strong> deutschlandweit überwiegend gut und die
+      Partikeldichte ist klar unter gesundheitlich bedenklichen Werten. Feinstaub
+      ist praktisch überall gleich, Stickoxide folgen dem Verkehr (schon in »Ruhe«
+      enthalten). Wer Stadt, Land, Berge oder Meer für Geruch bevorzugt, kann sich
+      in den entsprechenden Orten genauer umsehen..</li>
+    <li><strong>Kriminalität:</strong> die amtlichen Zahlen messen eher
+      die Polizeiarbeit als die Gefahr — wo mehr kontrolliert und angezeigt wird,
+      steht mehr in der Statistik. Dazu nur auf Kreisebene erhoben, für einen
+      Ortsvergleich also zu grob und zu unzuverlässig. Auch Verkehrsunfälle wären als
+      „Sicherheit" trügerisch (sie messen, wo viele Menschen unterwegs sind, nicht das
+      Risiko pro Person) — wir verzichten daher und führen nur das Hochwasserrisiko.</li>
+  </ul>
+
+  <h2>Daten &amp; Datenschutz</h2>
+  <p>Deine Einstellungen (und damit auch der Inhalt eines „Link kopieren“-Links)
+  bleiben <strong>lokal in deinem Browser</strong> — sie werden in der Session- und
+  der lokalen Ablage gespeichert, nie an einen Server gesendet, und du kannst sie
+  jederzeit über deinen Browser löschen. Es gibt kein Tracking und keine Konten.</p>
+  <p>Beim Laden ruft die Seite von fremden Servern nur die Kartenkacheln (CARTO)
+  ab — und, wenn du suchst, den Adressdienst Nominatim (OpenStreetMap). Diese
+  Dienste sehen dabei wie bei jedem Seitenaufruf deine IP-Adresse. Die
+  Programmbibliotheken liegen auf demselben Server wie die Karte selbst.</p>
+  <p>Dies ist die Kurzfassung. Die vollständigen Angaben stehen in der
+  <a href="impressum.html">Datenschutzerklärung</a>.</p>
+
+  <h2>Quellen &amp; Lizenzen</h2>
+  <p>Jede Datenquelle mit den Ebenen, in die sie einfließt.</p>
+  <h3>Daten</h3>
+  <ul class="src-list">
+    <li>Statistisches Bundesamt — Zensus 2022, Gitterdaten
+      <span class="uses">Miete · Wohnform · Alter im Viertel · Wenig Leerstand</span></li>
+    <li>BBSR — INKAR (dl-de/by-2-0): Mietniveau-Hochrechnung, Medianlohn
+      <span class="uses">Miete</span></li>
+    <li>Statistische Ämter des Bundes und der Länder — Regionalstatistik,
+      Unternehmensregister (Beschäftigte nach Wirtschaftszweig und Kreis;
+      Vervielfältigung mit Quellenangabe gestattet)
+      <span class="uses">Anbindung (Branche)</span></li>
+    <li>gtfs.de — Fahrplandaten (CC BY 4.0), Grundlage NeTEx-Datensatz, DELFI e.V.
+      <span class="uses">Anbindung · ÖPNV vor Ort · Freizeit &amp; Kultur</span></li>
+    <li>OpenStreetMap-Mitwirkende (ODbL)
+      <span class="uses">In der Nähe · Freizeit &amp; Kultur · Grünes Viertel ·
+        Natur erreichbar · Ortsbild (Denkmäler, Kunst, Straßenführung) ·
+        Anbindung (Straßennetz) · Ruhe (kleine Straßen)</span></li>
+    <li>JedeSchule.de (Code for Germany / Datenschule, CC0) — amtliche Schularten
+      aus den 16 Länder-Schulverzeichnissen
+      <span class="uses">In der Nähe (Schulformen)</span></li>
+    <li>Amtliche Hauskoordinaten der Länder via OpenAddresses — Standorte der
+      Schulen ohne Koordinaten in den Verzeichnissen (NI, SH: ©GeoBasis-DE/LVermGeo,
+      CC BY 4.0; SL, TH: dl-de/by-2-0; HE: dl-de/zero-2-0)
+      <span class="uses">In der Nähe (Schulstandorte)</span></li>
+    <li>ESA WorldCover 10 m (CC BY 4.0)
+      <span class="uses">Grünes Viertel · Natur erreichbar</span></li>
+    <li>Copernicus GLO-30 — Geländemodell
+      <span class="uses">Natur erreichbar (Relief)</span></li>
+    <li>Deutscher Wetterdienst — Klimaraster (1 km, dl-de/by-2-0)
+      <span class="uses">Sonne &amp; Trockenheit</span></li>
+    <li>Umweltbundesamt — Lärmkartierung (dl-de/by-2-0)
+      <span class="uses">Ruhe (Straßen- &amp; Fluglärm)</span></li>
+    <li>JRC/Copernicus (CEMS-EFAS) — Hochwasser-Tiefenkarten (CC BY 4.0)
+      <span class="uses">Hochwassersicherheit</span></li>
+    <li>Eisenbahn-Bundesamt — Schienenlärmkartierung (dl-de/by-2-0)
+      <span class="uses">Ruhe (Bahnlärm)</span></li>
+    <li>Bundesnetzagentur — Breitbandatlas
+      <span class="uses">Schnelles Internet</span></li>
+  </ul>
+
+  <h3>Kartendarstellung &amp; Adresssuche</h3>
+  <ul class="src-list">
+    <li>CARTO — Basiskarte „Positron“ (Kartendaten © OpenStreetMap-Mitwirkende, © CARTO)</li>
+    <li>EOX IT Services GmbH — Satellitenansicht „Sentinel-2 cloudless“ (CC BY-NC-SA 4.0,
+      nicht-kommerziell; enthält modifizierte Copernicus-Sentinel-Daten)
+      <span class="uses">nur in der Ansicht „Satellit“</span></li>
+    <li>Terrain Tiles über das AWS-Open-Data-Programm — Geländeschattierung
+      (u. a. gemeinfreies SRTM)
+      <span class="uses">nur in der Ansicht „Gelände“</span></li>
+    <li>Nominatim (OpenStreetMap Foundation, ODbL) — Adresssuche</li>
+  </ul>
+
+  <h3>Software</h3>
+  <p>Die Karte nutzt die quelloffenen Bibliotheken
+    <a href="https://deck.gl" target="_blank" rel="noopener">deck.gl</a> (MIT),
+    <a href="https://maplibre.org" target="_blank" rel="noopener">MapLibre GL JS</a>
+    (BSD-3-Clause) und
+    <a href="https://github.com/uber/h3-js" target="_blank" rel="noopener">h3-js</a>
+    (Apache-2.0). Der Quellcode dieses Projekts steht unter der MIT-Lizenz auf
+    <a href="https://github.com/Ivorforce/wohnortatlas" target="_blank" rel="noopener">GitHub</a>;
+    die vollständigen Lizenztexte aller Komponenten liegen dort in der Datei
+    <code>THIRD-PARTY-LICENSES.md</code>.</p>
+
+  <footer>
+    <p>Persönliches Entscheidungswerkzeug, keine Beratung. Werte sind Schätzungen
+    aus offenen Daten und können lokal danebenliegen.</p>
+    <p><a href="index.html">← zurück zur Karte</a> &nbsp;·&nbsp;
+      <a href="impressum.html">Impressum &amp; Datenschutz</a></p>
+  </footer>
+</div>
+</body>
+</html>
