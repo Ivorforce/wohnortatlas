@@ -205,7 +205,7 @@ def emit_targets(df):
     cpath = LAYERS / "cities.parquet"
     if not cpath.exists():
         print("NOTE: cities.parquet missing — no commute targets emitted")
-        return [], []
+        return [], [], {}
     cities = pd.read_parquet(cpath).sort_values("catchment_pop", ascending=False)
     gpop = gemeinde_pop(df)
     rc = np.load(LAYERS / "reach_cities.npz", allow_pickle=False)
