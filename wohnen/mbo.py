@@ -73,3 +73,29 @@ def mbo_triple(term, t, native, arange):
     B = np.where(present, np.clip(np.round(bval * 254), 0, 254), 255).astype(np.uint8)
     O = np.where(present, np.clip(np.round(onor * 254), 0, 254), 255).astype(np.uint8)
     return M, B, O
+
+
+def mbo_surfaces(U, mode_decay, opportunity, native, arange):
+    """M/B/O triple per (mode × field key) for a set of fields sharing the reach times.
+
+    U          = {npz column -> (C, N) uint8 minutes} (reach_centers.npz modes).
+    mode_decay = {client mode -> [columns whose MIN drives it]} (wohnen.reach.MODE_DECAY).
+    opportunity = {key -> (C,) per-centre opportunity weight}.
+    native      = {key -> (N,) per-cell own opportunity (the self centre at decay 1)}.
+    Returns {mode: {key: (M, B, O)}} of uint8 (N,) arrays (see mbo_triple).
+
+    decay depends only on the mode, so it's computed once per mode; the (C, N) score
+    buffer term = opportunity·decay is reused across keys."""
+    C, N = next(iter(U.values())).shape
+    term = np.empty((C, N), np.float32)
+    out = {}
+    for mode, decay_cols in mode_decay.items():
+        t = np.minimum.reduce([U[c] for c in decay_cols])
+        dk = decay(t)
+        per_key = {}
+        for key in opportunity:
+            np.multiply(dk, opportunity[key][:, None], out=term)
+            per_key[key] = mbo_triple(term, t, native[key], arange)
+        out[mode] = per_key
+        del dk, t
+    return out

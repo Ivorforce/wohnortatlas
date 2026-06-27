@@ -37,7 +37,7 @@ import pandas as pd
 
 from wohnen.cityness import cityness_o
 from wohnen.config import LAYERS, TRAVEL_SENTINEL_MIN
-from wohnen.mbo import decay as mbo_decay, mbo_triple
+from wohnen.mbo import mbo_surfaces
 from wohnen.reach import MODE_COLS, MODE_DECAY
 
 SENTINEL = 255        # reach_centers.npz uint8 no-reach marker
@@ -156,22 +156,17 @@ def main():
     # --- M/B/O cityness for the web "Alle Branchen" field targets (same shape as the job
     # sectors, 04h, via wohnen/mbo): per tier (any/gross) × mode, the M/B/O triple over the
     # cityness opportunity (o_any/o_gross) + the cell's own native cityness (cityness_o). ------
-    cyscore = np.empty((len(cids), N), np.float32)
     # per-centre cityness O from catchment via cityness_o (the SAME definition as the native +
     # 22's outline) — NOT centers["o_*"] (04b's, which uses whatever GROSS_LO/HI shipped then),
-    # so retuning the smoothstep needs only a 04f rerun, no 04b/re-route.
+    # so retuning the smoothstep needs only a 04f rerun, no 04b/re-route. native = the cell's own
+    # cityness (a self centre at decay 1). Both depend only on the tier, not the mode.
     center_cat = centers["catchment_pop"].reindex(cids).fillna(0.0).to_numpy(float)
+    Otier = {tier: cityness_o(center_cat, tier).astype(np.float32) for tier in TIERS}
+    natier = {tier: cityness_o(cat, tier).astype(np.float32) for tier in TIERS}
     cy = {}                                                  # f"{tier}_{m|b|o}_{mode}" -> (N,) u8
-    for mode, decay_cols in MODE_DECAY.items():
-        t = np.minimum.reduce([U[c] for c in decay_cols])
-        dk = mbo_decay(t)
-        for tier in TIERS:
-            Ov = cityness_o(center_cat, tier).astype(np.float32)
-            np.multiply(dk, Ov[:, None], out=cyscore)
-            nat = cityness_o(cat, tier).astype(np.float32)
-            M_, B_, O_ = mbo_triple(cyscore, t, nat, arange)
+    for mode, per_tier in mbo_surfaces(U, MODE_DECAY, Otier, natier, arange).items():
+        for tier, (M_, B_, O_) in per_tier.items():
             cy[f"{tier}_m_{mode}"], cy[f"{tier}_b_{mode}"], cy[f"{tier}_o_{mode}"] = M_, B_, O_
-        del dk, t
     np.savez_compressed(LAYERS / "reach_cityness.npz",
                         tiers=np.asarray(list(TIERS), dtype=str),
                         cell_ids=np.asarray(cells, dtype=str), **cy)

@@ -40,7 +40,7 @@ from scipy.spatial import cKDTree
 from wohnen.config import BBOX, INTERIM, JOBS_BUCKETS, LAYERS, RAW
 from wohnen.genesis import fetch_jobs_kreis
 from wohnen.io import write_parquet_if_changed
-from wohnen.mbo import decay as mbo_decay, mbo_triple   # shared M/B/O derivation (also 04f)
+from wohnen.mbo import mbo_surfaces                     # shared M/B/O derivation (also 04f)
 from wohnen.reach import MODE_COLS, MODE_DECAY
 
 # Field-strength O = blend of ABSOLUTE opportunity and SPECIALISATION (see combine_o). The
@@ -179,7 +179,7 @@ def main():
     mass = center_mass(centers, kreis, jobs)                  # (C, buckets)
 
     keys = list(JOBS_BUCKETS)
-    B, C = len(keys), len(cids)
+    B = len(keys)
     arange = np.arange(N)
     lq = location_quotient(jobs)
     half = {key: sector_half(mass[key].to_numpy(np.float32)) for key in keys}
@@ -207,19 +207,14 @@ def main():
                                lq_f[:, i].astype(np.float32), half[key])
                 for i, key in enumerate(keys)}
 
-    # Per (mode, sector): the M/B/O triple (wohnen/mbo.mbo_triple). decay depends only on the
-    # mode → compute once; reuse the (C, N) score buffer (it holds term = O·decay).
-    score = np.empty((C, N), np.float32)
+    # Per (mode, sector): the M/B/O triple via wohnen/mbo.mbo_surfaces (decay once per mode,
+    # reused score buffer); reshape its {mode: {sector: triple}} into the per-mode (B, N) npz rows.
     Mm = {m: np.full((B, N), 255, np.uint8) for m in O_MODES}
     Bm = {m: np.full((B, N), 255, np.uint8) for m in O_MODES}
     Om = {m: np.full((B, N), 255, np.uint8) for m in O_MODES}
-    for mode, decay_cols in MODE_DECAY.items():
-        t = np.minimum.reduce([U[c] for c in decay_cols])               # (C, N) uint8 door-to-door
-        dk = mbo_decay(t)
+    for mode, per_key in mbo_surfaces(U, MODE_DECAY, Ogate, native_O, arange).items():
         for bi, key in enumerate(keys):
-            np.multiply(dk, Ogate[key][:, None], out=score)             # term = O·decay, reused
-            Mm[mode][bi], Bm[mode][bi], Om[mode][bi] = mbo_triple(score, t, native_O[key], arange)
-        del dk, t
+            Mm[mode][bi], Bm[mode][bi], Om[mode][bi] = per_key[key]
 
     LAYERS.mkdir(parents=True, exist_ok=True)
     np.savez_compressed(
