@@ -53,7 +53,7 @@ $(INT)/gtfs_region.zip: $(RAW)/gtfs-germany.zip
 $(INT)/grid.parquet:
 	$(PY) scripts/02_grid.py
 
-$(INT)/pois.parquet $(INT)/roads.parquet $(INT)/green_areas.parquet $(INT)/no_access.parquet $(INT)/water_quality.parquet $(INT)/trees.parquet: $(INT)/region-filtered.osm.pbf
+$(INT)/pois.parquet $(INT)/roads.parquet $(INT)/green_areas.parquet $(INT)/no_access.parquet $(INT)/water_quality.parquet $(INT)/heath_areas.parquet $(INT)/trees.parquet: $(INT)/region-filtered.osm.pbf
 	$(PY) scripts/03_pois.py
 
 # minimal POI subset for the expensive 04d_swim routing — extracted content-aware (03b),
@@ -136,7 +136,7 @@ $(LAY)/demographics.parquet: $(INT)/grid.parquet $(LAY)/population.parquet
 $(LAY)/noise.parquet: $(INT)/pois.parquet $(INT)/grid.parquet
 	$(PY) scripts/08_noise.py
 
-$(LAY)/greenness.parquet: $(INT)/grid.parquet $(INT)/green_areas.parquet $(INT)/no_access.parquet $(INT)/water_quality.parquet $(INT)/trees.parquet $(INT)/roads.parquet
+$(LAY)/greenness.parquet: $(INT)/grid.parquet $(INT)/green_areas.parquet $(INT)/no_access.parquet $(INT)/water_quality.parquet $(INT)/heath_areas.parquet $(INT)/trees.parquet $(INT)/roads.parquet
 	$(PY) scripts/09_greenness.py
 
 $(LAY)/character.parquet: $(INT)/grid.parquet $(INT)/region-filtered.osm.pbf

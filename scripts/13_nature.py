@@ -28,7 +28,9 @@ Per SOURCE tile, per type, quality q ∈ [0,1]:
     residential catchment, so it captures more day-tripper bleed — but still
     residential, so true S-Bahn day-tripper pressure remains under-counted.
 
-  forest, grass, crop, wetland(class 90), heath(20/100, bare-60 excluded), lake(water cells
+  forest, grass, crop, wetland(class 90), heath (OSM natural=heath polygons from 09 —
+  WorldCover calls Calluna heath grassland, so its share is reclaimed OUT of grass here
+  to avoid double-counting the same ground), lake(water cells
   ≥0.04 RAW share so a small Weiher still registers, river-adjacent excluded;
   saturated quality scaled by water_recr_q from 09 — engineered water (reservoir/
   basin/Klärbecken) is demoted as it's not a swim/picnic outing, swim-tagged kept
@@ -48,8 +50,8 @@ cf. s_green's WATER_STANDALONE), scaled by its reachable green-bank quality — 
 river lifts an already-green cell but can't carry a barren one, and a concrete channel
 adds ~nothing. Swimming is the Freizeit layer's job; here water is aesthetics.
 
-Type ceilings W (best-eligible): lake .90, forest .82, wetland .65, sights .55,
-grass .48, heath .42, crop .15. crop barely counts.
+Type ceilings W (best-eligible): lake .90, forest .82, heath .80, wetland .65,
+sights .55, grass .48, crop .15. crop barely counts.
 
   R_t   = disk_weighted_max(q_t) — best reachable source, distance-discounted.
   base  = noisy-OR over W[t]·R_t: best type at full weight, the rest tempered by
@@ -92,8 +94,11 @@ RK, RSCALE = 8, 4.0  # reach DILATE kernel: best reachable nature over grid_disk
 W = {  # monotype ceiling: score if your reach were purely this best-eligible type.
     # river/stream are NOT here — they are capped bonuses (RIVER_BONUS/STREAM_BONUS),
     # not best-eligible, so the surroundings always decide a riverside hex.
-    "lake": 0.90, "forest": 0.82, "wetland": 0.65, "sights": 0.55,
-    "grass": 0.48, "heath": 0.42, "crop": 0.15,
+    # heath sits at forest tier: an open Calluna heath (the Lüneburger Heide) is a
+    # premier tranquil-nature outing, not a sub-meadow afterthought — the old 0.42
+    # (below grass) predated heath ever having real data (09 now sources it from OSM).
+    "lake": 0.90, "forest": 0.82, "heath": 0.80, "wetland": 0.65, "sights": 0.55,
+    "grass": 0.48, "crop": 0.15,
 }
 KSAT = {  # saturation midpoint per type: the per-source SMOOTHED share where p hits 0.5
     # forest/grass raised (was .50/.38): the dilate is a MAX, so a small park's
@@ -384,9 +389,17 @@ def main():
         q = pd.Series(np.where(present, bank_q, 0.0), index=g["h3"])
         return disk_weighted_max(q, cells_list, k=RK, scale_km=RSCALE).values
 
+    # WorldCover labels Calluna heath as grassland(30), so heath ground sits inside
+    # grass_share. Now that heath is a scored type (sourced from OSM in 09), feeding the
+    # SAME ground to both grass and heath would double-count it in the noisy-OR (a fake
+    # diversity bonus for one feature seen by two datasets). Reclassify it out of grass
+    # here — grass keeps only genuine meadow; the heath ground scores once, as heath.
+    # s_green is untouched (it uses the raw grass_share, where heath IS green ambience).
+    grass_for_nature = clip01(g["grass_share"].fillna(0).values
+                              - g["heath_share"].fillna(0).values)
     R = {
         "forest":  reach(g[t_share].fillna(0).values,        "forest"),
-        "grass":   reach(g["grass_share"].fillna(0).values,   "grass"),
+        "grass":   reach(grass_for_nature,                    "grass"),
         "crop":    reach(g["crop_share"].fillna(0).values,    "crop"),
         "lake":    reach(lake_vals, "lake", qfactor=recr_q),
         "wetland": reach(g["wetland_share"].fillna(0).values, "wetland"),

@@ -100,8 +100,14 @@ def main():
         return [shapely_wkt.loads(s) for s in df["wkt"]] if len(df) else []
     park_geoms = load_geoms("green_areas.parquet")
     noacc_geoms = load_geoms("no_access.parquet")
+    # OSM heath polygons (03): WorldCover labels Calluna heath as grassland, so the
+    # satellite heath classes barely fire; these recover the real heaths (Lüneburger/
+    # Lübtheener/…). Burned to a per-cell share, then max-combined with the WorldCover
+    # heath below so the same ground is never counted twice.
+    heath_geoms = load_geoms("heath_areas.parquet")
     park_tree = STRtree(park_geoms) if park_geoms else None
     noacc_tree = STRtree(noacc_geoms) if noacc_geoms else None
+    heath_tree = STRtree(heath_geoms) if heath_geoms else None
     # engineered-water polygons → per-pixel lake-source PENALTY (1 − quality);
     # block-meaned, then divided by the cell's water share in 13 to demote the
     # satellite water that is actually a reservoir/basin/Klärbecken (see 03).
@@ -121,7 +127,7 @@ def main():
     # (13) classes, not folded into s_green. BARE/SPARSE (60) is deliberately EXCLUDED:
     # the class lumps quarries/gravel-pits/construction with alpine scree, and crediting
     # a gravel pit as 0.42-nature is wrong; the rare scenic-scree loss is acceptable.
-    share_cols = list(CLASSES) + ["park", "no_access", "wetland", "heath", "water_pen"]
+    share_cols = list(CLASSES) + ["park", "no_access", "wetland", "heath", "heath_osm", "water_pen"]
     idx_of = {c: i for i, c in enumerate(grid["h3"])}
     sums = {name: np.zeros(len(grid)) for name in share_cols}
     counts = np.zeros(len(grid))
@@ -183,6 +189,8 @@ def main():
                       burn(park_geoms, park_tree, win_tf, ext, sh).ravel()[ok])
             np.add.at(sums["no_access"], si,
                       burn(noacc_geoms, noacc_tree, win_tf, ext, sh).ravel()[ok])
+            np.add.at(sums["heath_osm"], si,
+                      burn(heath_geoms, heath_tree, win_tf, ext, sh).ravel()[ok])
             np.add.at(sums["water_pen"], si,
                       burn_vals(waterq_geoms, waterq_pen, waterq_tree,
                                 win_tf, ext, sh).ravel()[ok])
@@ -196,7 +204,11 @@ def main():
         out[f"{name}_share"] = out["h3"].map(shares[name]).fillna(0)
     out["park_share"] = out["h3"].map(shares["park"]).fillna(0)
     out["wetland_share"] = out["h3"].map(shares["wetland"]).fillna(0)
-    out["heath_share"] = out["h3"].map(shares["heath"]).fillna(0)
+    # heath: WorldCover classes 20/100 (alpine shrubland/moss) MAX'd with the OSM-heath
+    # burn (Calluna heath the satellite calls grassland). max, not sum — the two sources
+    # overlap the same ground, so summing would double-count the share.
+    out["heath_share"] = np.maximum(out["h3"].map(shares["heath"]).fillna(0),
+                                    out["h3"].map(shares["heath_osm"]).fillna(0))
     # fraction of the hex you can't enter (military/fenced) — a mask for 13,
     # not green ambience, so kept raw (not in the smoothing batch below)
     out["no_access_share"] = out["h3"].map(shares["no_access"]).fillna(0)

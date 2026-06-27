@@ -127,6 +127,10 @@ def main():
     check("Speichersee partial (engineered water)", n_speicher, 0.25, 0.60)
     check("Herrsching (real lake) > Speichersee",
           v("s_nature", 48.0036, 11.1782) - n_speicher, 0.10, 1)
+    # Lüneburger Heide (Undeloh): premier Calluna heath. WorldCover labels it grassland,
+    # so heath is sourced from OSM natural=heath (03 → 09) and reweighted to forest tier
+    # (W .80, 13). Guards the fix — without it the Heide core read as plain grass (~0.64).
+    check("Lüneburger Heide (Undeloh) premier heath", v("s_nature", 53.18, 9.99), 0.75, 1.0)
 
     print("== green (land-green / non-water surface, noisy-OR water bonus, × built^2) ==")
     # green_land = veg as a fraction of the NON-WATER surface, noisy-OR'd with a capped

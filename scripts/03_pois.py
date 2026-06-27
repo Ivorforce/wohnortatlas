@@ -159,6 +159,37 @@ def extract_water_quality(src) -> pd.DataFrame:
     return pd.DataFrame(rows, columns=["quality", "wkt"])
 
 
+def extract_heath(src) -> pd.DataFrame:
+    """Assemble heath AREAS (`natural=heath` / `landuse=heath`) as (multi)polygon WKT.
+
+    WorldCover can't see heath — it labels Calluna/dwarf-shrub heath as grassland, so
+    09 burns these OSM polygons to recover `heath_share`. Uses the area assembler (same
+    tags-filter→`with_areas()` pattern as the water pass) because the premier heaths —
+    the Lüneburger, Lübtheener, Kyritz-Ruppiner Heide — are multipolygon RELATIONS the
+    closed-way pass can't reconstruct, and with no WorldCover backstop, missing them
+    would lose exactly the bodies that matter. Access (active ranges like Bergen-Hohne)
+    is handled downstream by the no_access military mask, so keep every heath polygon."""
+    wktfab = osmium.geom.WKTFactory()
+    rows = []
+    with tempfile.NamedTemporaryFile(suffix=".osm.pbf", delete=False) as tf:
+        heath_pbf = tf.name
+    try:
+        subprocess.run(
+            ["osmium", "tags-filter", "--overwrite", "-o", heath_pbf, str(src),
+             "nwr/natural=heath", "nwr/landuse=heath"],
+            check=True, capture_output=True)
+        for o in osmium.FileProcessor(heath_pbf).with_areas():
+            if not isinstance(o, osmium.osm.Area):
+                continue
+            try:
+                rows.append((wktfab.create_multipolygon(o),))
+            except (RuntimeError, ValueError):
+                continue
+    finally:
+        Path(heath_pbf).unlink(missing_ok=True)
+    return pd.DataFrame(rows, columns=["wkt"])
+
+
 def seg_len_m(lat1, lon1, lat2, lon2):
     kx = 111_320 * math.cos(math.radians((lat1 + lat2) / 2))
     return math.hypot((lon2 - lon1) * kx, (lat2 - lat1) * 111_320)
@@ -476,6 +507,9 @@ def main():
     water_q = extract_water_quality(SRC)
     t_water = perf_counter() - t0
 
+    # heath areas (incl. relations) — same area-assembler pass; WorldCover misses heath
+    heath = extract_heath(SRC)
+
     if PROFILE:
         rem = t_handler - h.t_sample - h.t_trees - h.t_poly
         print("=== 03_pois timing (PROFILE_03) ===")
@@ -495,6 +529,7 @@ def main():
     green.to_parquet(INTERIM / "green_areas.parquet", index=False)
     noaccess.to_parquet(INTERIM / "no_access.parquet", index=False)
     water_q.to_parquet(INTERIM / "water_quality.parquet", index=False)
+    heath.to_parquet(INTERIM / "heath_areas.parquet", index=False)
     trees.to_parquet(INTERIM / "trees.parquet", index=False)
 
     print(f"pois: {len(pois)}")
@@ -504,6 +539,7 @@ def main():
     print(f"green areas: {len(green)} ({green['kind'].value_counts().to_dict() if len(green) else {}})")
     print(f"no-access areas: {len(noaccess)} ({noaccess['kind'].value_counts().to_dict() if len(noaccess) else {}})")
     print(f"engineered water: {len(water_q)} ({water_q['quality'].value_counts().to_dict() if len(water_q) else {}})")
+    print(f"heath areas: {len(heath)}")
     print(f"trees: {len(trees)}")
 
 
