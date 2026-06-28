@@ -195,35 +195,57 @@ def sample_lden(pts_xy, sources):
 
 # --- EBA federal-rail Lden bands (vector WFS) ------------------------------
 def fetch_eba_rail() -> gpd.GeoDataFrame | None:
-    """Fetch Lden isophone bands for the bbox, paginated."""
+    """Fetch Lden isophone bands for the bbox, paginated and spatially tiled.
+
+    The EBA WFS caps a single query's result set at ~740k features and silently
+    drops the overflow, which truncates a national bbox to its northern band (it
+    is served roughly north-to-south). So the bbox is split into ~80 km tiles —
+    each well under the cap — and each tile is paginated independently. A polygon
+    straddling a tile edge is returned by both tiles; gml_id deduping drops the
+    copy (the max-join in rail_db_at is idempotent either way, this only saves
+    memory)."""
     from wohnen.config import BBOX
     x0, y0 = to_25832(BBOX[0], BBOX[1])
     x1, y1 = to_25832(BBOX[2], BBOX[3])
-    feats = []
-    start = 0
-    try:
-        while True:
-            page = cached_get_json(
-                EBA_WFS,
-                params={
-                    "service": "WFS", "version": "2.0.0", "request": "GetFeature",
-                    "typeNames": "app:Isophonenbaender_EK",
-                    "outputFormat": "application/geo+json",
-                    "count": "10000", "startIndex": str(start),
-                    "bbox": f"{x0:.0f},{y0:.0f},{x1:.0f},{y1:.0f},"
-                            "urn:ogc:def:crs:EPSG::25832",
-                },
-                cache_key=f"eba_{start}", rate_bucket="eba", rate_limit_s=1.0)
-            got = page.get("features", [])
-            feats.extend(got)
-            print(f"  eba page @{start}: {len(got)} features")
-            if len(got) < 10000:
-                break
-            start += 10000
-    except Exception as e:
-        print(f"WARNING: EBA WFS failed ({e})")
-        if not feats:
-            return None
+    TILE_M = 80_000.0
+    nx = max(1, int(np.ceil((x1 - x0) / TILE_M)))
+    ny = max(1, int(np.ceil((y1 - y0) / TILE_M)))
+    xs = np.linspace(x0, x1, nx + 1)
+    ys = np.linspace(y0, y1, ny + 1)
+    feats, seen = [], set()
+    for ix in range(nx):
+        for iy in range(ny):
+            tx0, tx1, ty0, ty1 = xs[ix], xs[ix + 1], ys[iy], ys[iy + 1]
+            start = 0
+            try:
+                while True:
+                    page = cached_get_json(
+                        EBA_WFS,
+                        params={
+                            "service": "WFS", "version": "2.0.0",
+                            "request": "GetFeature",
+                            "typeNames": "app:Isophonenbaender_EK",
+                            "outputFormat": "application/geo+json",
+                            "count": "10000", "startIndex": str(start),
+                            "bbox": f"{tx0:.0f},{ty0:.0f},{tx1:.0f},{ty1:.0f},"
+                                    "urn:ogc:def:crs:EPSG::25832",
+                        },
+                        cache_key=f"eba_{ix}_{iy}_{start}",
+                        rate_bucket="eba", rate_limit_s=1.0)
+                    got = page.get("features", [])
+                    for ft in got:
+                        fid = ft.get("id") or ft.get("properties", {}).get("gml_id")
+                        if fid is not None:
+                            if fid in seen:
+                                continue
+                            seen.add(fid)
+                        feats.append(ft)
+                    if len(got) < 10000:
+                        break
+                    start += 10000
+            except Exception as e:
+                print(f"WARNING: EBA tile {ix},{iy} failed ({e})")
+    print(f"  eba: {len(feats)} unique features over {nx}x{ny} tiles")
     if not feats:
         return None
     return gpd.GeoDataFrame.from_features(feats, crs=4326)
@@ -234,9 +256,13 @@ def rail_db_at(child_pts) -> np.ndarray | None:
     gdf = fetch_eba_rail()
     if gdf is None or "hh_measure" not in gdf.columns:
         return None
-    if "gml_description" in gdf.columns:
-        lden = gdf[gdf["gml_description"].astype(str)
-                   .str.contains("Lden", case=False, na=False)]
+    # Keep Lden only. The bands carry Lden (isophonenart_id 5, bands 55-75 dB)
+    # AND Lnight (id 6, bands 45-70 dB) on the same layer; the lower-dB Lnight
+    # isophones reach further, so mixing them in would assign Lden-anchor noise
+    # to cells that only see a night contour. (No gml_description column exists.)
+    if "isophonenart_id" in gdf.columns:
+        art = pd.to_numeric(gdf["isophonenart_id"], errors="coerce")
+        lden = gdf[art == 5]
         if len(lden):
             gdf = lden
     gdf["db"] = pd.to_numeric(gdf["hh_measure"], errors="coerce")

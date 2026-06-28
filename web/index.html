@@ -981,7 +981,7 @@ LAYERS.push({
   // precomputed per-mode gravity surfaces. Sits right after "In der Nähe".
   const ai = LAYERS.findIndex(l => l.key === "s_access");
   LAYERS.splice(ai < 0 ? LAYERS.length : ai + 1, 0, {
-    key: "s_freizeit", label: "Freizeit & Kultur", weight: 1.0,
+    key: "s_freizeit", label: "Freizeit & Kultur", weight: 0.4,
     desc: "Wie gut du Freizeit erreichst (kein »direkt vor der Tür«, sondern ein "
       + "Wochenend-/Abend-Weg von ~20 Min). Hak unten an, was zählt — Ausgehen & "
       + "Kultur, Schwimmen, … Eine angehakte Aktivität wird zur Bedingung: ist sie "
@@ -1879,9 +1879,9 @@ const LIFE_STAGES = {
   // (high 65+ → senioren) and the kid-dense extreme (high u18 → familie).
   etabliert: { label: "Etabliert", tag: "Etabliert",
     m: (u, s, a) => smoothstep(a, 42, 47.5) * (1 - smoothstep(s, 0.27, 0.34)) * (1 - smoothstep(u, 0.21, 0.27)) },
-  // pure senior-share membership (median .20 → ~0.5; a Kurort → 1).
+  // pure senior-share membership (national median 65+ share ~.23 → ~0.5; a Kurort → 1).
   senioren:  { label: "Senioren", tag: "Senioren",
-    m: (u, s, a) => smoothstep(s, 0.13, 0.27) },
+    m: (u, s, a) => smoothstep(s, 0.16, 0.30) },
 };
 const STAGE_KEYS = Object.keys(LIFE_STAGES);
 // "Happy living NEXT TO it": spread each cell's life-stage membership to its immediate
