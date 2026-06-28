@@ -407,6 +407,11 @@ def main():
     check("Bamberg character high", v("s_character", 49.8917, 10.8869), 0.4, 1.0)
     check("Lübeck character high", v("s_character", 53.8655, 10.6866), 0.4, 1.0)
     check("Wismar character high", v("s_character", 53.8917, 11.4653), 0.35, 1.0)
+    # regression guard: a prefab modernist estate (zero heritage, smooth REGULAR
+    # arcs) must not read as high character. street_grain's step-sharpness discount
+    # (17_streets) denies entropy-grain to smooth arcs/grids, so Gropiusstadt — once
+    # p96 on curvy-road entropy alone — now sits below the characterful quarters.
+    check("Gropiusstadt prefab not high character", v("s_character", 52.4256, 13.462), 0.0, 0.30)
 
     print("== national: ÖPNV ==")
     check("Hamburg core ÖPNV high", v("s_oepnv", 53.5538, 9.993), 0.55, 1.0)
