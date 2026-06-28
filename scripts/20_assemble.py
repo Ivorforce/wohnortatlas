@@ -42,12 +42,18 @@ KITA_CROWD_MAX = 0.20
 # CANOPY_* caps the OSM street-tree supplement (Munich's tree cadastre saturates
 # tree_canopy on COUNT in the dense Altstadt): a bounded top-up where WorldCover
 # misses canopy between houses, not a term that can dominate on a few street trees.
+# CAP kept LOW (0.10) because `tree_canopy = n/(n+150)` saturates on tree COUNT, so its
+# bonus is really an OSM-completeness signal: ~75 % of Hamburg/Berlin cells hit the cap
+# (complete cadastres) vs ~26 % of Frankfurt's — a +0.20 cap inflated well-mapped cities
+# ~0.10 over sparsely-mapped ones (pure data artifact, not real green) and over-clipped
+# their leafy cells. 0.10 halves that bias and the clipping while keeping all green
+# anchors in band; the real cure is a uniform Sentinel-2 NDVI canopy term (future work).
 LAND_GREEN_FULL = 0.85   # green-fraction-of-land that reads as fully green
 WATER_FULL = 0.30        # open-water + waterway level that saturates the water term
 WATERWAY_W = 0.5         # OSM narrow-river (line proxy) weight inside the water term
 WATER_STANDALONE = 0.20  # pure-water floor == max water bonus (the noisy-OR slice)
 BUILT_BITE = 0.4         # mild superlinear sealing penalty for overlay leak (see above)
-CANOPY_CAP, CANOPY_W = 0.20, 0.5
+CANOPY_CAP, CANOPY_W = 0.10, 0.5
 
 # Ortsbild = THREE signals — structural FABRIC (hist_density: space-defining built
 # heritage — walls/towers/churches/buildings; markers like Stolpersteine/crosses
