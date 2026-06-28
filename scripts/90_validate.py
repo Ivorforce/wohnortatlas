@@ -135,17 +135,20 @@ def main():
     print("== green (land-green / non-water surface, noisy-OR water bonus, × built^2) ==")
     # green_land = veg as a fraction of the NON-WATER surface, noisy-OR'd with a capped
     # water bonus (a treeless riverbank no longer reads as green as a forest; pure water
-    # floors ~0.2), then a mild built^2 sealing penalty for the park/canopy overlay leak.
-    # cropland LOW (open != green); leafy-but-built reads green; paved centre low;
-    # forest/leafy-residential high.
+    # floors ~0.2), then a superlinear built^2 ENCLOSURE penalty (walls-in-a-canyon).
+    # cropland LOW (open != green); dense Altbau reads MID (walled-in, not green even
+    # with street trees); paved centre near the floor; forest/leafy-villa high.
     check("Lechfeld cropland low (open != green)", v("s_green", 48.205, 10.86), 0.25, 0.55)
     check("Moosham pasture+crop below forest", v("s_green", 47.9967, 12.2123), 0.45, 0.80)
     check("Höhenkirchner Forst forest high", v("s_green", 48.008, 11.717), 0.85, 1.0)
     check("Grünwald leafy residential high", v("s_green", 48.043, 11.527), 0.70, 1.0)
-    # leafy-but-built must read green: canopy carries a half-sealed tree-lined
-    # Viertel (built^2 penalty bites lightly here), unlike a paved centre.
-    check("Schwabing-Nord leafy-but-built green", v("s_green", 48.1714, 11.5879), 0.65, 0.95)
-    check("Marienplatz dense center low (sealed)", v("s_green", 48.137, 11.575), 0.0, 0.45)
+    # dense Altbau with street trees reads MID, not green: the built^2 enclosure
+    # penalty bites (walls in view), but it's clearly above a paved centre (it has the
+    # trees) and well below a leafy villa quarter or forest.
+    check("Schwabing-Nord dense Altbau mid", v("s_green", 48.1714, 11.5879), 0.45, 0.58)
+    # the cubic enclosure penalty drives a no-gaps-left paved centre near the floor, so
+    # the geometric composite can express "terrible for green" (was ~0.34 pre-cubic).
+    check("Marienplatz dense center low (sealed)", v("s_green", 48.137, 11.575), 0.0, 0.15)
     # the layer must discriminate: not "almost all rural is perfect" (was 91 %). Floor
     # cut 0.40→0.30 with the land-green split: only forest (~35 %) now maxes, while
     # agriculture-heavy cropland correctly sits below 0.9 (open != green) and waterside

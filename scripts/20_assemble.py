@@ -24,12 +24,23 @@ KITA_CROWD_MAX = 0.20
 #     counting only built land). veg / (land · LAND_GREEN_FULL): a fully-forested
 #     hex → 1 with NO water needed, and built land dilutes green by sitting in the
 #     denominator but not the numerator. LAND_GREEN_FULL<1 = you needn't be literally
-#     100 % forest to max. This carries most of the old built-up discrimination, but
-#     NOT all: the OSM park_share + canopy overlays are additive on TOP of the
-#     WorldCover partition (not in the land denominator), so a sealed Altstadt with a
-#     dense street-tree cadastre (Marienplatz canopy→cap) still shows "green land". A
-#     MILD superlinear built² penalty (BUILT_BITE, half the pre-split 0.8) plugs that:
-#     light on a leafy half-built street, firm on a paved centre.
+#     100 % forest to max. This carries the LINEAR built-up discrimination (more built
+#     → less veg per land), but NOT the superlinear ENCLOSURE effect: walking a dense
+#     Altbau street your view fills with walls, not just less ground — a canyon reads
+#     grey even where the patch of ground between the houses is leafy. The
+#     (1 − BUILT_BITE·built**BUILT_POW) penalty is that enclosure term. The exponent is
+#     CUBIC, not square: the last stretch of sealing is a perceptual cliff (70→85 %
+#     built loses the final courtyards/gaps → wall-to-wall canyon), which a square
+#     under-weights. BUILT_BITE is calibrated so the cubic crosses the old square right
+#     at dense-Altbau built (~0.56): everything MORE sealed is pushed down hard (a
+#     paved centre reaches ~0.07, so the geometric composite can actually express
+#     "terrible for green"), everything LESS sealed is untouched. It ALSO absorbs the
+#     OSM park_share + canopy overlay leak (those terms are additive on TOP of the
+#     WorldCover partition, not in the land denominator, so a sealed Altstadt with a
+#     dense tree cadastre would otherwise show false "green land"). WorldCover is
+#     top-down, so built uses footprint as a proxy for facade presence; it cannot see
+#     wall HEIGHT, so a leafy low-rise and a grey high-rise at equal footprint score
+#     alike (a known limit — OSM building:levels is too sparse nationally to fix it).
 #  2. water_amb = the hex's own waterfront feel, a saturating term over open water +
 #     the OSM narrow-river proxy (waterway_share — moved here from veg; it's water,
 #     not land green). WATER_FULL is reached at ~30 % water, so a riverbank counts
@@ -42,18 +53,22 @@ KITA_CROWD_MAX = 0.20
 # CANOPY_* caps the OSM street-tree supplement (Munich's tree cadastre saturates
 # tree_canopy on COUNT in the dense Altstadt): a bounded top-up where WorldCover
 # misses canopy between houses, not a term that can dominate on a few street trees.
-# CAP kept LOW (0.10) because `tree_canopy = n/(n+150)` saturates on tree COUNT, so its
-# bonus is really an OSM-completeness signal: ~75 % of Hamburg/Berlin cells hit the cap
-# (complete cadastres) vs ~26 % of Frankfurt's — a +0.20 cap inflated well-mapped cities
-# ~0.10 over sparsely-mapped ones (pure data artifact, not real green) and over-clipped
-# their leafy cells. 0.10 halves that bias and the clipping while keeping all green
-# anchors in band; the real cure is a uniform Sentinel-2 NDVI canopy term (future work).
+# CAP kept VERY LOW (0.04) because `tree_canopy = n/(n+150)` saturates on tree COUNT, so
+# its bonus is really an OSM-completeness signal: ~75 % of Hamburg/Berlin cells hit the
+# cap (complete cadastres) vs ~26 % of Frankfurt's — a high cap inflated well-mapped
+# cities over sparsely-mapped ones (pure data artifact, not real green) AND lifted every
+# paved centre with a tree cadastre off the floor. 0.04 keeps a faint between-the-houses
+# top-up without floating a sealed centre; the real cure is a uniform Sentinel-2 NDVI
+# canopy term (future work).
 LAND_GREEN_FULL = 0.85   # green-fraction-of-land that reads as fully green
 WATER_FULL = 0.30        # open-water + waterway level that saturates the water term
-WATERWAY_W = 0.5         # OSM narrow-river (line proxy) weight inside the water term
+WATERWAY_W = 0.15        # OSM narrow-river (line proxy) weight inside the water term:
+                         # a canalised river through a paved centre is mild ambience,
+                         # not enough to max the water bonus (open water uses water_share)
 WATER_STANDALONE = 0.20  # pure-water floor == max water bonus (the noisy-OR slice)
-BUILT_BITE = 0.4         # mild superlinear sealing penalty for overlay leak (see above)
-CANOPY_CAP, CANOPY_W = 0.10, 0.5
+BUILT_BITE = 1.35        # enclosure-penalty coefficient, calibrated to BUILT_POW so the
+BUILT_POW = 3.0          # cubic crosses the old square at dense-Altbau built (~0.56)
+CANOPY_CAP, CANOPY_W = 0.04, 0.5
 
 # Ortsbild = THREE signals — structural FABRIC (hist_density: space-defining built
 # heritage — walls/towers/churches/buildings; markers like Stolpersteine/crosses
@@ -158,10 +173,12 @@ def main():
         # noisy-OR: water spends a fixed slice of the remaining headroom, so a leafy
         # hex can't be over-maxed and a treeless one floors at WATER_STANDALONE.
         s = 1.0 - (1.0 - green_land) * (1.0 - WATER_STANDALONE * water_amb)
-        # mild built² penalty for the park/canopy overlay leak the land denominator
-        # can't see (a sealed centre with a rich street-tree cadastre).
+        # cubic enclosure penalty: dense built = a canyon of walls in view, so the
+        # land denominator's linear dilution isn't enough (also cancels the park/canopy
+        # overlay leak the denominator can't see). clip01: the steep coefficient drives
+        # the multiplier negative past ~90 % built (a near-veto handful), floored to 0.
         built = out["builtup_share"].fillna(0)
-        out["s_green"] = s * (1 - BUILT_BITE * built ** 2)
+        out["s_green"] = clip01(s * (1 - BUILT_BITE * built ** BUILT_POW))
     if noise is not None:
         merge(noise)
         out["s_quiet"] = 1 - out["noise_penalty"].fillna(0)
