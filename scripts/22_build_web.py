@@ -12,11 +12,11 @@ The container is:
   inhabited (0/1), score (0-100), raw (nullable, all u8). A raw column's
   <encoding> (see encode_raw) is one of: {"dec"} -> value = code / 10^dec,
   {"lo","q"} -> lo + code*q, or {"log","lo","q"} -> expm1(lo + code*q).
-  Codes clamp to [0,254]; 255 is the NaN sentinel. (Percentile-rank "pct"
-  columns were dropped — the client computes per-target CDF ranks itself.)
+  Codes clamp to [0,254]; 255 is the NaN sentinel. (No percentile-rank "pct"
+  columns — the client computes per-target CDF ranks itself.)
 Raw binary fetched over http(s) (the map is served, not opened from file://),
-so no base64 wrapper — the layer/target/center manifests that used to ride in
-a base64 JS blob are folded into the header instead, leaving one fetch + one gzip.
+so no base64 wrapper — the layer/target/center manifests are folded into the header,
+leaving one fetch + one gzip.
 """
 
 import gzip
@@ -46,9 +46,9 @@ from wohnen.reach import MODE_COLS as REACH_MODES   # shipped per-mode chunk ord
 #   s_rent / s_anbindung — recomputed client-side from raw columns + user controls;
 #   s_access / s_freizeit — computed client-side from raw t_*/reach_* columns;
 #   s_density / s_age     — preference pseudo-layers over raw pop_dens / avg_age.
-# The old bundled pipeline scores (s_rent / s_daily / s_famedu / s_leisure) were
-# dropped 2026-06 — the web recomputes Miete / In der Nähe / Freizeit client-side
-# from the raw columns, so they are neither written nor shipped.
+# The bundled pipeline scores (s_rent / s_daily / s_famedu / s_leisure) are neither
+# written nor shipped — the web recomputes Miete / In der Nähe / Freizeit client-side
+# from the raw columns.
 # Panel order (client-side s_rent/s_anbindung/s_access/s_freizeit/s_density/s_age
 # splice in RELATIVE to these in index.html). Narrative: the place & its green
 # run Ortsbild → Grünes Viertel → Natur erreichbar (green bridges built-character
@@ -238,9 +238,9 @@ def emit_targets(df):
         if c["id"] in multi_city_ids:
             entry["multi"] = 1
         # every city (incl. München) ships a real per-city reach chunk = the catchment-
-        # weighted percentile over its centers (04f). München no longer reuses the base
-        # central-Hbf columns as its target — picking "München" now means "reach most of
-        # München", not "reach the Hbf" (the base cols stay in the payload for the cell
+        # weighted percentile over its centers (04f). München's target is this per-city
+        # percentile, not the base central-Hbf columns — picking "München" means "reach most
+        # of München", not "reach the Hbf" (the base cols stay in the payload for the cell
         # inspector's raw time-to-centre readout).
         if c["id"] not in city_row:
             continue
@@ -387,13 +387,12 @@ def main():
         meta, arr = encode_raw(c, df[c].values, dec)
         cols.append(({"name": c, "kind": "raw", "dtype": "u8", **meta}, arr))
 
-    # No "pct" columns: the population-weighted percentile ranks they carried were
-    # dead weight (~35% of data.bin) — the client computes its own per-target CDF
-    # ranks (arrCDF/cdfPct in index.html), which the old whole-region/München-base
-    # pct couldn't do anyway. Dropped; index.html never read CELLS.pct.
+    # No "pct" columns: a population-weighted percentile rank would be dead weight
+    # (~35% of data.bin) and whole-region/München-base anyway — the client computes
+    # its own per-target CDF ranks (arrCDF/cdfPct in index.html) instead.
 
-    # the layer/target/center manifests fold into the header (they used to be separate
-    # globals in a base64 JS blob); emit_targets also writes the per-target reach chunks.
+    # the layer/target/center manifests fold into the header; emit_targets also writes
+    # the per-target reach chunks.
     targets, centers, outline = emit_targets(df)
     branches = emit_branche(df)            # after emit_targets (which clears stale chunks)
 

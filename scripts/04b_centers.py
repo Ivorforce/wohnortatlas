@@ -7,11 +7,11 @@ suppress everything within KERNEL_KM ("same destination", ~15 min e-bike), repea
 while a neighbourhood still holds >= POP_SEED people. This puts a dot on every
 town's actual core — one for a small town, several across a big city (they fall
 out of the fixed suppression radius) — and never on the empty land between
-clusters. (The earlier catchment-coverage surface peaked on that empty land and,
-worse, gated candidacy on catchment size, so it tagged tiny well-embedded places
+clusters. (A catchment-coverage surface would instead peak on that empty land and,
+worse, gate candidacy on catchment size, tagging tiny well-embedded places
 while missing isolated real towns like Dorfen — high population, low catchment.)
 
-The catchment population O(h) is no longer used for *placement*, only for the
+The catchment population O(h) is not used for *placement*, only for the
 opportunity *weight* read at each chosen center: O_any (saturating) and O_gross
 (Großstadt smoothstep) drive the two aggregate reach tiers. Per-center
 reachability is routed in 04c; aggregates + per-city reach chunks derive there

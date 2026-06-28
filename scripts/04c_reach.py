@@ -17,8 +17,8 @@ per-stop arrival times (FastRaptorWorker, skipping its own egress propagation), 
 min-plus those against the cached egress, per departure-minute, at R5's exact
 percentile index. Validated within 1 min of R5 door-to-door (scripts/04c_proto.py;
 StreetRouter platform-vertex egress is ~+1 min conservative). The three DIRECT modes
-(bike/walk/car) stay plain TravelTimeMatrix reverse routes. Bike is now a REGULAR bike
-(r5py default speed) everywhere — the old special e-bike handling is dropped.
+(bike/walk/car) stay plain TravelTimeMatrix reverse routes. Bike is a REGULAR bike
+(r5py default speed) everywhere.
 
 Reuses the wohnen.r5_routing scaffold (parallel TravelTimeMatrix + matrix()) via
 wohnen.reach.load_r5, so the r5py setup lives in exactly one place.

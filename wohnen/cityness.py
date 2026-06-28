@@ -12,8 +12,8 @@ C_HALF = 25_000        # o_any half-saturation: O = c / (c + C_HALF)
 # inhabitants — catchment runs ~⅓–½ of a city's headcount and saturates for big cities). So
 # these are catchment values, not population: ~20k catchment ≈ a dense Mittelstadt (ramp start),
 # ~55k ≈ a solid Großstadt (saturated). The town→Großstadt transition is the gradient; metros
-# all reach 1. (An earlier 38k/160k read these as inhabitant counts — too high as catchment, it
-# zeroed real but spread-out Großstädte like Jena.)
+# all reach 1. These are catchment, not inhabitant counts: read as inhabitants the band would
+# sit too high and zero out real but spread-out Großstädte like Jena.
 GROSS_LO, GROSS_HI = 20_000, 55_000
 
 

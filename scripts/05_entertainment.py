@@ -11,10 +11,9 @@ from wohnen.config import INTERIM, LAYERS
 from wohnen.h3util import disk_weighted_sum, points_to_cells
 
 # cafés/restaurants are ambience, not nightlife — weigh culture/nightlife
-# venues higher. Restaurants added 2026-06 (café-weight): village
-# Wirtshäuser are tagged restaurant, not pub, and were invisible before.
-# 2026-06: everyday gastro (fast_food/ice_cream) at low weight; culture
-# enriched with museum/gallery (high) + library/community_centre (the latter
+# venues higher. Restaurants get café-weight: village Wirtshäuser are tagged
+# restaurant, not pub. Everyday gastro (fast_food/ice_cream) is low weight;
+# culture covers museum/gallery (high) + library/community_centre (the latter
 # the main culture signal small towns actually have, so low but nonzero).
 WEIGHTS = {
     "bar": 1.0, "pub": 1.0, "biergarten": 1.0, "nightclub": 1.5, "cafe": 0.5,

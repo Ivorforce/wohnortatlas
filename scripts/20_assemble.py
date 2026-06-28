@@ -19,7 +19,7 @@ KITA_SUPPLY_REF = 0.75
 KITA_CROWD_MAX = 0.20
 
 # s_green = "Grünes Viertel" — two SEPARATE quantities, noisy-OR'd, so water never
-# masquerades as canopy (a treeless riverbank used to read as green as a forest):
+# masquerades as canopy (else a treeless riverbank would read as green as a forest):
 #  1. green_land = vegetation as a fraction of the NON-WATER surface (like Wohnform
 #     counting only built land). veg / (land · LAND_GREEN_FULL): a fully-forested
 #     hex → 1 with NO water needed, and built land dilutes green by sitting in the
@@ -31,7 +31,7 @@ KITA_CROWD_MAX = 0.20
 #     (1 − BUILT_BITE·built**BUILT_POW) penalty is that enclosure term. The exponent is
 #     CUBIC, not square: the last stretch of sealing is a perceptual cliff (70→85 %
 #     built loses the final courtyards/gaps → wall-to-wall canyon), which a square
-#     under-weights. BUILT_BITE is calibrated so the cubic crosses the old square right
+#     under-weights. BUILT_BITE is calibrated so the cubic crosses a plain square right
 #     at dense-Altbau built (~0.56): everything MORE sealed is pushed down hard (a
 #     paved centre reaches ~0.07, so the geometric composite can actually express
 #     "terrible for green"), everything LESS sealed is untouched. It ALSO absorbs the
@@ -67,7 +67,7 @@ WATERWAY_W = 0.15        # OSM narrow-river (line proxy) weight inside the water
                          # not enough to max the water bonus (open water uses water_share)
 WATER_STANDALONE = 0.20  # pure-water floor == max water bonus (the noisy-OR slice)
 BUILT_BITE = 1.35        # enclosure-penalty coefficient, calibrated to BUILT_POW so the
-BUILT_POW = 3.0          # cubic crosses the old square at dense-Altbau built (~0.56)
+BUILT_POW = 3.0          # cubic crosses a plain square at dense-Altbau built (~0.56)
 CANOPY_CAP, CANOPY_W = 0.04, 0.5
 
 # Ortsbild = THREE signals — structural FABRIC (hist_density: space-defining built
@@ -208,14 +208,14 @@ def main():
     demo = load("demographics")
     if demo is not None:
         merge(demo)
-        # no s_alive anymore: age is a client-side preference pseudo-layer
+        # no s_alive layer: age is a client-side preference pseudo-layer
         # (s_age, Gaussian around a selectable target on avg_age — like
-        # s_density); its nightlife component was redundant with the going-out signal
+        # s_density); its nightlife component is covered by the going-out signal
 
-        # Kita crowding is supply-RELATIVE, not raw headcount (2026-06): Kita/
+        # Kita crowding is supply-RELATIVE, not raw headcount: Kita/
         # Grundschule supply scales ~1:1 with population (corr 0.93, per-1000
-        # flat rural→core, München even above norm), so the old raw-pop discount
-        # just penalized dense areas for being dense. r = facilities per 1000
+        # flat rural→core, München even above norm), so a raw-pop discount
+        # would just penalize dense areas for being dense. r = facilities per 1000
         # locals in the same 3 km kernel as catchment_pop; below KITA_SUPPLY_REF
         # a place is genuinely under-served (building lagged growth) → discount.
         # Resident pop is a clean demand proxy here: Grundschule is catchment-
@@ -242,7 +242,7 @@ def main():
             return np.sqrt(dens * clip01(1000 * d / cl / anchor))  # × per-capita
 
         # hist (OSM historic) is the primary signal — the Bavaria-only Wikidata
-        # Denkmal leg was dropped for the national build (see 10_denkmal).
+        # Denkmal source is not used (see 10_denkmal).
         s_hist = _intensity("hist_density", CHAR_HIST_K, CHAR_HIST_PC)
         d_art = out["art_density"].fillna(0) if "art_density" in out.columns else 0.0
         s_art = d_art**2 / (d_art**2 + CHAR_ART_K**2)   # density-only (urban OK)

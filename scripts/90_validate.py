@@ -82,8 +82,8 @@ def main():
         return float(sc.loc[cell(lat, lon), col])
 
     print("== rent (calibrated asking, €/m²) ==")
-    # € bounds calibrated at the INKAR uplift level, ~10 % above the legacy
-    # Homeday level (which level is right is unresolved;
+    # € bounds calibrated at the INKAR uplift level, ~10 % above the Homeday
+    # level (which level is right is unresolved;
     # rent is used as a comparison layer, so bounds follow the source level)
     check("Glockenbach expensive", v("rent_cal", 48.1294, 11.5696), 18, 27)
     check("Schwabing dense urban", v("rent_cal", 48.1664, 11.5879), 18, 27)
@@ -98,8 +98,8 @@ def main():
               max(vals) - min(vals), 0, 7, " €")
 
     print("== noise (0-1) ==")
-    # airport_penalty is now official END aircraft Lden (LfU flughaefen WMS),
-    # not the old perception-tuned corridor model. Lden is a 24 h energy
+    # airport_penalty is official END aircraft Lden (LfU flughaefen WMS),
+    # not a perception-tuned corridor model. Lden is a 24 h energy
     # average, so intermittent flyovers that feel loud (high per-event Lmax)
     # average well below contour: Attaching is mapped at ~61 dB Lden (hex
     # energy-mean ~0.25 as the village straddles the 55 dB edge), and Pulling
@@ -134,7 +134,7 @@ def main():
 
     print("== green (land-green / non-water surface, noisy-OR water bonus, × built^2) ==")
     # green_land = veg as a fraction of the NON-WATER surface, noisy-OR'd with a capped
-    # water bonus (a treeless riverbank no longer reads as green as a forest; pure water
+    # water bonus (a treeless riverbank does not read as green as a forest; pure water
     # floors ~0.2), then a superlinear built^2 ENCLOSURE penalty (walls-in-a-canyon).
     # cropland LOW (open != green); dense Altbau reads MID (walled-in, not green even
     # with street trees); paved centre near the floor; forest/leafy-villa high.
@@ -147,12 +147,12 @@ def main():
     # trees) and well below a leafy villa quarter or forest.
     check("Schwabing-Nord dense Altbau mid", v("s_green", 48.1714, 11.5879), 0.45, 0.58)
     # the cubic enclosure penalty drives a no-gaps-left paved centre near the floor, so
-    # the geometric composite can express "terrible for green" (was ~0.34 pre-cubic).
+    # the geometric composite can express "terrible for green".
     check("Marienplatz dense center low (sealed)", v("s_green", 48.137, 11.575), 0.0, 0.15)
-    # the layer must discriminate: not "almost all rural is perfect" (was 91 %). Floor
-    # cut 0.40→0.30 with the land-green split: only forest (~35 %) now maxes, while
-    # agriculture-heavy cropland correctly sits below 0.9 (open != green) and waterside
-    # rural no longer maxes on water alone — ~60 % of rural still reads >0.7.
+    # the layer must discriminate: not "almost all rural is perfect". With the land-green
+    # split only forest (~35 %) maxes, while agriculture-heavy cropland correctly sits
+    # below 0.9 (open != green) and waterside rural does not max on water alone — ~60 % of
+    # rural still reads >0.7.
     rural = sc[sc["builtup_share"].fillna(0) < 0.05]
     check("rural cells maxed-out (built<5%, s_green>0.9)",
           (rural["s_green"] > 0.9).mean(), 0.30, 0.85)
@@ -168,12 +168,10 @@ def main():
     check("rural Bockhorn low character", v("s_character", 48.3100, 11.9600), 0.0, 0.30)
 
     print("== leisure (going-out venue density) ==")
-    # s_leisure (the old bundled leisure score) + ent_score/ent_diversity were
-    # dropped 2026-06; the web Freizeit signal now lives in the reach_* gravity
-    # (04e), built from ent_density. Guard the raw going-out density that feeds
-    # it: absolute supply still leads — München center is top-tier and clears a
-    # town edge by a wide margin (the old "not pop-penalized" + ">Freising"
-    # regressions, restated on the surviving signal).
+    # The web Freizeit signal lives in the reach_* gravity (04e), built from
+    # ent_density. Guard the raw going-out density that feeds it: absolute supply
+    # leads — München center is top-tier and clears a town edge by a wide margin
+    # ("not pop-penalized" + ">Freising").
     inh_ed = sc[sc["population"].fillna(0) > 0]["ent_density"]
     p95 = float(inh_ed.quantile(0.95))
     check("München center going-out density top-tier",
@@ -185,7 +183,7 @@ def main():
     print("== familie & alltag (supply-relative crowding + provisioning) ==")
     # Kita crowding is supply-relative, not raw headcount: Kita/Grundschule
     # scale ~1:1 with population, so the DENSEST area must not be the most
-    # penalized (the old raw-pop −20 % bug). München's per-1000 supply sits at
+    # penalized (a raw-pop discount would invert it). München's per-1000 supply sits at
     # the regional norm or above → its crowding discount ≈ 0.
     rf_muc = 1000 * v("kita_supply", 48.137, 11.575) / v("catchment_pop", 48.137, 11.575)
     check("München Kita/school supply ≥ norm", rf_muc, 0.70, 1.5)
@@ -201,7 +199,7 @@ def main():
           float(closer.mean()), 0.40, 0.90)
     # secondary schooling counts all Sek-I tracks, not just Gymnasium: in a big
     # share of cells a Real-/Mittelschule is the nearest secondary, so dropping
-    # them back into "other" (the pre-2026-06 state) would collapse this.
+    # them back into "other" would collapse this.
     sek_closer = float(((np.minimum(sc["t_realschule_min"], sc["t_mittelschule_min"])
                          < sc["t_gymnasium_min"] - 2)).mean())
     check("Real-/Mittelschule broaden secondary coverage", sek_closer, 0.30, 0.80)

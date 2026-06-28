@@ -31,7 +31,7 @@ def main():
     # student household of 4 still counts as 0 under-18s), share_65plus pins
     # senior enclaves. Stored as a fraction [0,1]. `–` (suppressed, <few residents)
     # → NaN, dropped by read_grid_csv. All three are smoothed below into a
-    # neighbourhood mix (replaces the old per-hex k=1 median).
+    # neighbourhood mix.
     for col, zname, csv_name, vcol in [
         ("share_u18", "zensus_u18.zip",
          "Zensus2022_Anteil_unter_18_1km-Gitter.csv", "AnteilUnter18"),

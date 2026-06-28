@@ -118,9 +118,9 @@ def main():
     print(f"green polys: {len(park_geoms)}, no-access polys: {len(noacc_geoms)}, "
           f"engineered-water polys: {len(waterq_geoms)}")
 
-    # The full 10 m crop is ~10.6 GB; the old code held it + two rasterised
-    # masks + a 105 M-row frame at once, which OOMs a 32 GB box (zeros only fit
-    # by compression). Stream it in horizontal strips, reduce each 10x10 px
+    # The full 10 m crop is ~10.6 GB; holding it + two rasterised masks + a
+    # 105 M-row frame at once OOMs a 32 GB box. Stream it in horizontal strips,
+    # reduce each 10x10 px
     # block to a 100 m cell, assign to h3, and accumulate per-hex sums/counts —
     # identical result (per-hex mean of the 100 m cell shares), bounded memory.
     # wetland/moor (90) and heath (shrubland 20 + moss/lichen 100) are extra s_nature

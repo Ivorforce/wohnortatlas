@@ -9,9 +9,9 @@ OSM objects are read from region-filtered.osm.pbf — its tags-filter keeps
 PBF. node()/way() early-exit on untagged elements (most of the file is geometry
 nodes), so we never pay a per-element dict build for nothing.
 
-(The Bavaria-only Wikidata P4244 Denkmalliste leg was dropped for the national
-build: P4244 covers only Bavaria, so blending it would bias the map toward
-Bavaria. OSM `historic` is the consistent nationwide signal — validated to
+(The Wikidata P4244 Denkmalliste is not used: P4244 covers only Bavaria, so
+blending it would bias the map toward Bavaria. OSM `historic` is the consistent
+nationwide signal — validated to
 separate historic Altstädte from bland suburbs uniformly across Länder.)"""
 
 import sys
@@ -27,7 +27,7 @@ from wohnen.config import INTERIM, LAYERS, in_bbox
 from wohnen.h3util import disk_weighted_sum, points_to_cells
 
 # Heritage objects split into THREE streams by what they DO to a townscape, not
-# by scale (validated 2026-06: historic=memorial is ~0% structural, so the cut
+# by scale (validated: historic=memorial is ~0% structural, so the cut
 # lies cleanly along the OSM subtype):
 #   STRUCTURAL  space-DEFINING built fabric (walls/buildings/towers that form the
 #               enclosure you move through) -> the PRIMARY Ortsbild signal.

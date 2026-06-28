@@ -12,9 +12,9 @@ labelled places — Altstädte land p67-99, planned/grid p11-24; design.md).
 `street_grain` = Hn stretched between empirical anchors (a real grid ≈ HN_LO → 0,
 a medieval core ≈ HN_HI → 1) and GATED to street-rich cells (entropy is noise
 where there's no fabric, and Ortsbild is moot in open country) → 0 elsewhere.
-Dead-end share was prototyped and dropped: German Trabantenstädte are connected
-apartment estates (not cul-de-sac sprawl) and Altstädte have Sackgassen, so it
-ranked backwards. Entropy alone already ranks curvy-modern below the Altstädte.
+Dead-end share is not used: German Trabantenstädte are connected apartment
+estates (not cul-de-sac sprawl) and Altstädte have Sackgassen, so it ranks
+backwards. Entropy alone already ranks curvy-modern below the Altstädte.
 
 Reads region-filtered.osm.pbf (its tags-filter keeps nwr/highway = ALL highway
 classes, so the small 2 GB extract suffices); no routing.

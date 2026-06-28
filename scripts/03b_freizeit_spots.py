@@ -2,7 +2,7 @@
 freizeit_spots.parquet — the ONLY POI input to the expensive 04d_swim reverse-routing.
 
 Isolating these rows means editing unrelated POI extraction (03_pois: doctors, shops,
-schools, …) no longer invalidates the swim/kino/klettern/golf routing. Written
+schools, …) does not invalidate the swim/kino/klettern/golf routing. Written
 content-aware (write_parquet_if_changed): reach_spots.npz only re-routes when these
 specific spot rows actually change, not whenever pois.parquet is regenerated."""
 

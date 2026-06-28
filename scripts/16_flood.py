@@ -9,8 +9,8 @@ normalized depth-severity in place of euro damage:
   flood_eas        = ∫ sev d(annual prob)        (trapezoid over p = 1/RP)
   flood_score      = 1 − clip(flood_eas / EAS_ANCHOR)
 
-Frequent + deep → high EAS → low score (the old "häufige Überflutung ≈
-Ausschluss" veto, now continuous and depth-aware). Permanent water bodies are
+Frequent + deep → high EAS → low score (a continuous, depth-aware
+"häufige Überflutung ≈ Ausschluss"). Permanent water bodies are
 excluded — a lake is not a flood risk. Ships interpretable tooltip values:
 flood_depth_hq100 (depth at the 1-in-100 yr reference flood) and flood_rp_first
 ("floods ~every N years", first RP with ≥ FRAC_FIRST of the hex wet).

@@ -8,9 +8,9 @@ seconds when a knob changes (the routing in 04c is the only expensive step):
    (255 = unreachable), cell_ids stored once — a long parquet was ~1.16e9 rows nationally.
    A whole CITY is a catchment-weighted
    PERCENTILE (PCT_CITY) over its centers: "reach MOST of the city's people decently",
-   the right reading of "I have ties all across it". The old nanmin shipped the NEAREST
-   corner, so a home hugging one edge looked great while the far side was an hour away —
-   and that was ~redundant with "Irgendeine Großstadt" anyway. A PART is a single center
+   the right reading of "I have ties all across it" — a nearest-corner min would let a
+   home hugging one edge look great while the far side was an hour away, and would be
+   ~redundant with "Irgendeine Großstadt" anyway. A PART is a single center
    (a job in one specific corner scores honestly, no min). 22_build_web ships these as
    lazy per-target chunks; the manifests are cities.parquet / parts.parquet.
 
@@ -176,8 +176,8 @@ def main():
 
     # --- per-CITY / per-PART reach as uint8 MATRICES (the picker's named targets) --------
     # Ship reach_cities/reach_parts as npz matrices (targets × cells, uint8 minutes, 255 =
-    # unreachable) with cell_ids stored ONCE — the reach_centers.npz model. The old long
-    # parquet repeated the h3 string + float64 minutes per (target, cell) row: 2160 cities ×
+    # unreachable) with cell_ids stored ONCE — the reach_centers.npz model. A long
+    # parquet repeating the h3 string + float64 minutes per (target, cell) row would be 2160 cities ×
     # 536 553 cells ≈ 1.16e9 rows (~90 GB) → OOM. uint8 matrix is ~6 GB in RAM, <1 GB on
     # disk; full-minute resolution is lossless (routing caps at max_time, 255 = beyond reach).
     cm = centers.reindex(cids)                       # centers aligned to the npz row order

@@ -62,7 +62,7 @@ def energy_sum(*dbs):
 # --- UBA federal official Lden raster (classified PNG over WMS) ------------
 #
 # The UBA noise WMS renders Lden as five fixed 5 dB band colors — verified
-# byte-for-byte identical to the per-Land (LfU) palette, 2026-06. We map each
+# byte-for-byte identical to the per-Land (LfU) palette. We map each
 # color to its band-center dB; PNG alpha=0 marks "no band here" (<55 dB).
 _BAND_RGB = np.array([[226, 242, 191], [243, 198, 131], [205, 70, 62],
                       [117, 8, 92], [67, 10, 74]], float)

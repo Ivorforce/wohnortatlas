@@ -92,11 +92,11 @@ def main():
     dentists = pois[(pois["category"] == "family")
                     & (pois["subcategory"] == "dentist")]
 
-    # Two food tiers (2026-06): VOLLSORTIMENT = the full weekly shop (supermarket +
+    # Two food tiers: VOLLSORTIMENT = the full weekly shop (supermarket +
     # small grocery + rural general store); FRISCHE = daily fresh-food gap-fillers
     # (Bäcker/Metzger/Obst-Gemüse/Hofladen/Bioladen), which the web scores at a cap
-    # below a real grocery. Kiosk is NOT food (split out in 03 — it inflated the old
-    # merged convenience column with newspaper/cigarette booths).
+    # below a real grocery. Kiosk is NOT food (split out in 03 — newspaper/cigarette
+    # booths don't belong in the convenience tier).
     vollsort = pois[(pois["category"] == "family")
                     & pois["subcategory"].isin(["supermarket", "convenience", "general"])]
     frische = pois[(pois["category"] == "family")

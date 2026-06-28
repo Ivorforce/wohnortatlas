@@ -32,17 +32,17 @@ ENTERTAINMENT = {
     # village Wirtshäuser are usually tagged restaurant, not pub — without
     # them small-town Gasthaus culture is invisible to the Freizeit gravity
     "restaurant",
-    # 2026-06: everyday gastro (döner/imbiss, Eisdielen) at low weight, and
+    # everyday gastro (döner/imbiss, Eisdielen) at low weight, and
     # culture venues (library/community_centre via amenity; museum/gallery via
     # tourism, handled below) — enriches the thin culture mode + gastro depth
     "fast_food", "ice_cream", "library", "community_centre",
 }
 # culture venues tagged under tourism= rather than amenity=
 ENTERTAINMENT_TOURISM = {"museum", "gallery"}
-# sport venues (leisure=*). NO LONGER CONSUMED (2026-06): the sport access layer
-# was dropped — generic sport proximity is a population-density echo (it saturates
-# wherever people live) with no independent recommendation power; swimming covers
-# the one place-specific active-leisure factor. Extraction kept (cheap, harmless)
+# sport venues (leisure=*). Extracted but NOT scored: generic sport proximity is a
+# population-density echo (it saturates wherever people live) with no independent
+# recommendation power; swimming covers the one place-specific active-leisure factor.
+# Extraction kept (cheap, harmless)
 # so removing it doesn't invalidate the other pois.parquet consumers (05/noise/
 # 13/labels). Drop SPORT_LEISURE entirely if you ever rebuild those anyway.
 SPORT_LEISURE = {"sports_centre", "sports_hall", "pitch", "fitness_centre",
@@ -263,7 +263,7 @@ def classify(tags) -> tuple[str, str] | None:
             return "family", "pediatrician"
         return "family", "doctor"
     # dentist: a distinct everyday-care need a GP can't cover (Nahversorgung
-    # AND-component, 2026-06). amenity=dentist or healthcare=dentist.
+    # AND-component). amenity=dentist or healthcare=dentist.
     if a == "dentist" or tags.get("healthcare") == "dentist":
         return "family", "dentist"
     # Two food tiers the web "In der Nähe" scores on (12 ships t_vollsort_min +
@@ -273,7 +273,7 @@ def classify(tags) -> tuple[str, str] | None:
     # FRISCHE (daily fresh-food gap-fillers — capped below a real grocery in the web
     # food score): Bäckerei, Metzgerei, Obst/Gemüse, Hofladen (shop=farm), Bioladen.
     # KIOSK is split out on purpose — a newspaper/cigarette booth is NOT daily food
-    # and must not fake food access (merged into convenience, it inflated the old col).
+    # and must not fake food access by sitting in the convenience tier.
     if tags.get("shop") == "supermarket":
         return "family", "supermarket"
     if tags.get("shop") == "convenience":
@@ -314,7 +314,7 @@ def classify(tags) -> tuple[str, str] | None:
         return "family", "badesee"
     if tags.get("leisure") == "playground":
         return "family", "playground"
-    # niche s_freizeit leisure sources (2026-06): lumpy, place-specific activities
+    # niche s_freizeit leisure sources: lumpy, place-specific activities
     # 04d reverse-routes into reach_* gravity surfaces. Distinct from the unused
     # generic SPORT_LEISURE echo. Klettern = indoor Kletterhallen (sport=climbing
     # AT a built facility, NOT natural crags); Golf = courses. Checked BEFORE

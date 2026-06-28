@@ -100,14 +100,14 @@ W = {  # monotype ceiling: score if your reach were purely this best-eligible ty
     # river/stream are NOT here — they are capped bonuses (RIVER_BONUS/STREAM_BONUS),
     # not best-eligible, so the surroundings always decide a riverside hex.
     # heath sits at forest tier: an open Calluna heath (the Lüneburger Heide) is a
-    # premier tranquil-nature outing, not a sub-meadow afterthought — the old 0.42
-    # (below grass) predated heath ever having real data (09 now sources it from OSM).
+    # premier tranquil-nature outing, not a sub-meadow afterthought (09 sources
+    # heath from OSM, so it carries real data).
     "lake": 0.90, "forest": 0.82, "heath": 0.80, "wetland": 0.65, "sights": 0.55,
     "grass": 0.48, "crop": 0.15,
 }
 KSAT = {  # saturation midpoint per type: the per-source SMOOTHED share where p hits 0.5
-    # forest/grass raised (was .50/.38): the dilate is a MAX, so a small park's
-    # dense core cell used to read like a big forest — a higher midpoint demands a
+    # forest/grass sit high: the dilate is a MAX, so a small park's dense core cell
+    # would otherwise read like a big forest — a higher midpoint demands a
     # genuinely large contiguous share, so Nymphenburg/urban parks count less while
     # rural forests (share→0.9) stay near 1. lake/wetland keep low midpoints (concave
     # curve) so a small near Weiher still counts.
@@ -153,14 +153,14 @@ RIVER_BONUS, STREAM_BONUS = 0.30, 0.12
 # ~50% green banks already reads as a full green riverbank; built-up directly negates
 # (a concrete channel is not an outing, however quiet the neighbourhood).
 BANK_FULL, BANK_BUILT = 0.50, 1.0
-# crowd LOAD = pop SUM over the reach kernel (not catchment_wide); CROWD_HALF
-# re-seated for that magnitude — it scales with the kernel (RK12/RSCALE6's load runs
-# ~2.4x the old RK8/RSCALE4 load), so CROWD_HALF tracks it to keep the SAME relative
-# discount (dense Munich green a crowded outing, the countryside barely touched).
+# crowd LOAD = pop SUM over the reach kernel (not catchment_wide); CROWD_HALF is
+# seated for that magnitude — it scales with the kernel load, so the relative
+# discount stays the SAME (dense Munich green a crowded outing, the countryside
+# barely touched).
 # Discount bottoms at 1-MAX, never negates.
 CROWD_MAX, CROWD_HALF = 0.58, 540_000
 NOISE_BITE = 0.38  # a fully-noisy reachable area (Lden>=70) keeps 1-BITE of its value
-#                    (was .30): a traffic-lined riverbank/park is a louder outing
+#                    — a traffic-lined riverbank/park is a louder outing
 
 
 def dem_tiles():
