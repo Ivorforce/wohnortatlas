@@ -84,3 +84,27 @@ Deno.test("budgetFor∘slackFor: re-deriving the budget from the recovered slack
 Deno.test("round5: snaps to the nearest 5", () => {
   near(round5(82), 80); near(round5(83), 85); near(round5(52), 50); near(round5(0), 0);
 });
+
+// --- overAnbindungBudget: per-target-type hide-filter (extracted from a 2nd block) ----------
+const mf = html.match(/\/\/ <anbindung-mbo-filter>[^\n]*\n([\s\S]*?)\/\/ <\/anbindung-mbo-filter>/);
+if (!mf) throw new Error("anbindung-mbo-filter block not found in index.html");
+const { ANBINDUNG_FIELD_EPS, overAnbindungBudget } = new Function(
+  mf[1] + "\nreturn { ANBINDUNG_FIELD_EPS, overAnbindungBudget };")();
+
+Deno.test("field target hides on the reachable-opportunity score, not time", () => {
+  // a real local market / reachable city scores well → kept; a remote opportunity-poor cell
+  // scores ~0 → hidden. The (broken) self-centre minutes (reachEff 0) and budget are ignored.
+  assert(!overAnbindungBudget(true, 0.46, 0, 60), "Dorfen-like score 0.46 kept");
+  assert(!overAnbindungBudget(true, 0.07, 0, 60), "Bockhorn-like 0.07 kept (just above eps)");
+  assert(overAnbindungBudget(true, 0.02, 0, 60), "remote score 0.02 hidden");
+  assert(overAnbindungBudget(true, 0.0, 0, 60), "no reachable opportunity hidden");
+  // reachEff is meaningless for a field (self-centre = 0 everywhere) → must not rescue/hide
+  assert(overAnbindungBudget(true, 0.01, 0, 999) && !overAnbindungBudget(true, 0.9, 999, 1),
+    "field decision uses score only, independent of reachEff/budget");
+  assert(ANBINDUNG_FIELD_EPS > 0 && ANBINDUNG_FIELD_EPS < 0.2, "eps is a small score floor");
+});
+
+Deno.test("city/part target keeps the time filter (reachEff > budget)", () => {
+  assert(overAnbindungBudget(false, 0.9, 80, 60), "80 min > 60 budget hidden (score ignored)");
+  assert(!overAnbindungBudget(false, 0.0, 50, 60), "50 min ≤ 60 budget kept (low score ignored)");
+});

@@ -1460,13 +1460,23 @@ function recomputeAnbindung() {
 // the min budget, B = its opportunity (the FLOOR), O = everything reachable within MBO_HORIZON
 // 2 h, noisy-OR (the CEILING, ≥ B). The score scales with BOTH budget and reach: at T = M you
 // get B, at T = 2 h you get O, linearly between (B ≤ score ≤ O). A mode where T < M can't reach
-// a job in budget → it drops out (and feeds reachEff so the over-budget filter still hides
-// truly-unreachable cells). The mode-preference penalty discounts the SCORE, not the time
-// (here M is often ~0, so penalizing minutes does nothing): a "wenn nötig" mode is worth only
-// MODE_SCORE_PEN of a liked one — "you can work here, but only via a mode you don't enjoy". Foot
-// is never penalized. Best-wins + diversity over the enabled modes.
+// a job in budget → it drops out. The mode-preference penalty discounts the SCORE, not the
+// time (here M is often ~0, so penalizing minutes does nothing): a "wenn nötig" mode is worth
+// only MODE_SCORE_PEN of a liked one — "you can work here, but only via a mode you don't enjoy".
+// Foot is never penalized. Best-wins + diversity over the enabled modes.
 const MBO_HORIZON = 120;
 const MODE_SCORE_PEN = { gern: 1.0, koennen: 0.75 };   // 25% score discount for "wenn nötig"
+// <anbindung-mbo-filter> (extracted verbatim by web/anbindung-budget.test.js — keep self-contained)
+// The "über Zeitbudget ausblenden" hide-filter, per target type. A CITY/PART target is one
+// place with one commute, so it filters on time (reachEff > budget). A FIELD (M/B/O) target's
+// opportunity is everywhere to some degree, and the self-centre ("you're already here") zeroes
+// the per-mode minutes for most cells — so reachEff can't filter. The budget-aware score (∈[0,1],
+// already 0 when the only opportunity is over budget or unreachable) is the honest "unsuitable"
+// test: hide where it's near zero. EPS matches the other hide-filter epsilons (VETO_AMEN etc.).
+const ANBINDUNG_FIELD_EPS = 0.05;
+const overAnbindungBudget = (fieldTarget, score, reachEff, tmax) =>
+  fieldTarget ? score < ANBINDUNG_FIELD_EPS : reachEff > tmax;
+// </anbindung-mbo-filter>
 function recomputeAnbindungMBO(T) {
   const M = targetMBO, sc = [];
   const bikePref = MODE_PREF.bike, carPref = MODE_PREF.car, oepnvOn = OEPNV_PREF !== "nicht";
@@ -1609,7 +1619,11 @@ function autoSetBudget() {   // budget := baseline floor+slack, halved to the cl
   const ab = document.getElementById("anbindung_budget"), of = overallFloor();
   if (!ab || !isFinite(of)) return false;
   const base = budgetFor(of, anbindungSlack, +ab.min, +ab.max);   // Wenig pendeln OFF
-  const T = wenigPendeln ? (viableCommuteBudget(base, +ab.min, +ab.max) ?? base) : base;
+  // "Wenig pendeln" halves the budget to the closer-viable half via reachEff — but a FIELD
+  // target's reachEff is the degenerate self-centre (≈0 everywhere), so the halving would
+  // collapse it to the floor. Fields already get the tighter budget through `base` (slack);
+  // skip the reachEff halving for them.
+  const T = (wenigPendeln && !targetMBO) ? (viableCommuteBudget(base, +ab.min, +ab.max) ?? base) : base;
   if (+ab.value === T) return false;
   ab.value = String(T); return true;
 }
@@ -2679,7 +2693,7 @@ function filterStatsText() {
                  "(unabhängig von den aktiven Filtern)"];
   const drop = [];
   if (s.rentFail)    drop.push(`${fmt(s.rentFail)} wegen hoher Miete`);
-  if (s.commuteFail) drop.push(`${fmt(s.commuteFail)} wegen langer Pendelzeit`);
+  if (s.commuteFail) drop.push(`${fmt(s.commuteFail)} wegen ${s.fieldTarget ? "schwacher Anbindung" : "langer Pendelzeit"}`);
   if (s.foodFail)     drop.push(`${fmt(s.foodFail)} wegen fehlender Nahversorgung`);
   if (s.schoolFail)   drop.push(`${fmt(s.schoolFail)} wegen fehlender Schule`);
   if (s.freizeitFail) drop.push(`${fmt(s.freizeitFail)} wegen fehlender Freizeit`);
@@ -2715,11 +2729,13 @@ function recomputeFilters() {
   // Germany is too far".
   const st = { universe: 0, unbew: 0, unreach: 0, rentFail: 0, commuteFail: 0,
                foodFail: 0, schoolFail: 0, freizeitFail: 0, fit: 0, hidden: 0,
-               hasTarget: !!targetKey };
+               hasTarget: !!targetKey, fieldTarget: !!targetMBO };
   for (let i = 0; i < N; i++) {
     const cUnbew    = !!(inh && !inh[i]);
     const reachable = !targetKey || reachEff[i] < TRAVEL_SENTINEL_MIN;  // < 2 h, the universe bound
-    const cCommute  = !!(targetKey && reachEff[i] > tmax);  // over budget (but in-universe ⇒ < 2 h)
+    // over budget: a city/part filters on time (reachEff > budget), a field on its budget-aware
+    // reachable-opportunity score (the self-centre breaks the field minutes — see overAnbindungBudget)
+    const cCommute  = !!(targetKey && overAnbindungBudget(!!targetMBO, S.s_anbindung[i], reachEff[i], tmax));
     const cFood     = !essFoodPass[i];
     const cSchool   = !essSchoolPass[i];
     const cFreizeit = !freizeitPass[i];     // a ticked leisure source unreachable here
@@ -3570,10 +3586,16 @@ function cellVerdict(home) {
     }
   }
   if (targetKey) {
-    const tmax = +document.getElementById("anbindung_budget").value;
-    const r = reachEff[home];
-    if (r >= TRAVEL_SENTINEL_MIN) reasons.push("außer Reichweite");
-    else if (r > tmax) reasons.push(`Pendelzeit +${Math.round(r - tmax)} min`);
+    if (targetMBO) {
+      // a field target has no single commute time (the self-centre zeroes the minutes); the
+      // reason is the weak budget-aware reachable-opportunity score, not a Pendelzeit overage
+      if (S.s_anbindung[home] < ANBINDUNG_FIELD_EPS) reasons.push("Anbindung zu schwach");
+    } else {
+      const tmax = +document.getElementById("anbindung_budget").value;
+      const r = reachEff[home];
+      if (r >= TRAVEL_SENTINEL_MIN) reasons.push("außer Reichweite");
+      else if (r > tmax) reasons.push(`Pendelzeit +${Math.round(r - tmax)} min`);
+    }
   }
   if (!essFoodPass[home]) reasons.push("keine Nahversorgung");
   for (const r of schoolVetoReasons(home)) reasons.push(r);
