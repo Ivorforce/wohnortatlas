@@ -77,25 +77,25 @@
   </p>
 
   <h2>Die Ebenen</h2>
-  <p>Was jede Ebene misst, woraus — und wo sie an ihre Grenze stößt. Wie du eine
-  Ebene einstellst und gewichtest, steht im Tooltip ihres Reglers auf der Karte.</p>
+  <p>Was jede Ebene misst — und wo sie an ihre Grenzen stoßen. Wie du eine
+  Ebene einstellst und gewichtest, steht im Tooltip der Regler in der Seitenleiste.</p>
 
   <div class="layer"><h3>Miete (Bezahlbarkeit)</h3>
     <p>Geschätzte Kaltmiete bei Neuanmietung gegen dein Budget. Grundlage sind die
     Mieten aus dem Zensus 2022, je Gemeinde auf das heutige Marktniveau hochgerechnet —
     diese Hochrechnung teils nur auf Kreisebene, also lokal grob. Voll gewertet,
     solange die Miete bequem in deinem Budget liegt; je näher sie an deine Obergrenze
-    rückt, desto steiler fällt der Wert. Lagen klar über dem Budget kannst du auf Wunsch
-    ganz ausblenden.</p></div>
+    rückt, desto steiler fällt der Wert. Lagen klar über dem Budget werden ausgeblendet.
+    </p></div>
 
   <div class="layer"><h3>Anbindung</h3>
     <p>Routing mit deinen Verkehrsmitteln zu deinem Lebensmittelpunkt, Tür zu Tür
     samt Wartezeit, über Fahrplandaten (gtfs.de) und das Straßennetz von
     OpenStreetMap. Es zählt der beste deiner Wege; weitere geben nur Bonus. Das Ziel
-    wählst du selbst: eine bestimmte Stadt, oder du richtest dich nach dem Beruf —
-    »Alle Branchen (Stadt/Großstadt)« wenn dir das Feld egal ist (die beste erreichbare,
-    gewichtet nach Größe), oder eine bestimmte Branche, dann zählt, wie gut du Orte
-    erreichst, an denen dein Berufsfeld besonders stark ist.</p></div>
+    wählst du selbst: eine bestimmte Stadt, oder du richtest dich nach deinem Beruf —
+    du kannst bestimmte branchen wählen, dann wird das Angebot für dieses Berufsfeld
+    berücksichtigt. Andere Berufsfelder, die nicht klar in eine Branche passen, werden
+    über »Alle Branchen (Stadt/Großstadt)« modelliert.</p></div>
 
   <div class="layer"><h3>ÖPNV vor Ort</h3>
     <p>Wie gut der Ort an Bus &amp; Bahn liegt, zielunabhängig. Aus Abfahrten pro Tag
@@ -108,34 +108,32 @@
     Länder-Schulverzeichnissen via JedeSchule). Je Kategorie wählst du, wie nah es
     sein muss; gewertet wird der Weg zum nächsten Angebot.</p>
     <ul>
-      <li><b>Essen:</b> ein Supermarkt oder kleiner Laden zählt voll; Bäcker,
+      <li><b>Nahversorgung:</b> ein Supermarkt oder kleiner Laden zählt voll; Bäcker,
       Metzger und Hofladen füllen die tägliche Lücke, ersetzen aber keinen vollen
       Einkauf und zählen daher nur gedeckelt — ein Kiosk gilt nicht als
       Lebensmittelversorgung.</li>
-      <li><b>Gesundheit:</b> Apotheke, Arzt und Zahnarzt fließen als Faktoren ein,
-      schließen einen Ort aber nie aus.</li>
-      <li><b>KiTa &amp; Grundschule:</b> es zählt vor allem der Fußweg des Kindes —
+      <li><b>Gesundheit:</b> Apotheke, Arzt und Zahnarzt fließen als Faktoren in die
+      Nahversorgung ein, schließen einen Ort aber nie aus.</li>
+      <li><b>KiTa &amp; Grundschule:</b> es zählt vor allem ein kindgerechter Fußweg —
       ist es zu weit, bringst du es selbst (mit Abzug); »Direkt vor Ort« verlangt
       Fußnähe ohne Fahren. Knappes Platzangebot (Wartelisten) senkt den Wert
       zusätzlich.</li>
       <li><b>Weiterführende Schule:</b> erreicht das Kind allein, mit Rad oder
-      Schulbus; jede Schulform zählt einzeln (eine Realschule ersetzt kein
-      Gymnasium).</li>
+      Schulbus; jede Schulform zählt einzeln (Mittelschule, Realschule, Gymnasium).</li>
     </ul>
     <p>Misst Erreichbarkeit, nicht Qualität.</p></div>
 
   <div class="layer"><h3>Freizeit &amp; Kultur</h3>
-    <p>Wie gut du Freizeit und Kultur erreichst — nicht direkt vor der Tür, sondern
-    als Abend- oder Wochenendweg von etwa 15 bis 20 Minuten mit deinen Verkehrsmitteln.
-    Grundlage ist, wie viel rundherum los ist (Ausgeh-, Kultur- und Gastroszene;
+    <p>Wie gut du Freizeit und Kultur erreichst — als Abend- oder Wochenendweg von
+    etwa 15 bis 20 Minuten mit deinen Verkehrsmitteln.
+    Grundlage ist das allgemeine Freizeitangebot (über die Ausgeh-, Kultur- und Gastroszene geschätzt;
     Daten: OpenStreetMap), erreichbar gerechnet über Fahrplan- und Straßennetz wie
-    bei der Anbindung. Mehr und Näheres zählt mehr; eine Großstadt in Reichweite
-    schlägt das einzelne Wirtshaus.</p>
-    <p>Darunter hakst du an, was dir wichtig ist — Ausgehen &amp; Kultur, Kino,
+    bei der Anbindung. Je mehr und je näher, desto höher die Wertung.</p>
+    <p>Darunter hakst du an, was dir wichtig ist — Freizeitangebot, Kino,
     Schwimmen, Kletterhalle oder Golf. Eine angehakte Aktivität wird zur
     Bedingung: ist sie gar nicht erreichbar, blendet »Ungeeignete ausblenden« den
-    Ort aus. Misst Erreichbarkeit, nicht Qualität — und OpenStreetMap kann Angebote
-    übersehen.</p></div>
+    Ort aus. Misst Erreichbarkeit, nicht Qualität. Wenn ein Ort falsch repräsentiert
+    aussieht, stimmt wahrscheinlich ein OpenStreetMap Eintrag nicht.</p></div>
 
   <div class="layer"><h3>Grünes Viertel</h3>
     <p>Wie grün die nähere Umgebung ist (etwa 500 m). Aus Satellitendaten (ESA
@@ -150,37 +148,34 @@
     den Wert zusätzlich (diffuser Stadtlärm); Industrie- und Tramlärm fehlen.</p></div>
 
   <div class="layer"><h3>Natur erreichbar</h3>
-    <p>Ob du mit dem Rad schnell ins Grüne kommst — gewertet wird der beste
-    erreichbare Ort: Wald, See, Fluss, Hügel oder Aussichtspunkt (Satellitendaten,
-    Geländemodell, OpenStreetMap). Näheres zählt mehr, ein großes zusammenhängendes
-    Naturgebiet mehr als ein einzelner kleiner Fleck. Hügelige Natur zählt etwas
-    mehr, vielbesuchte etwas weniger — der Andrang an berühmten Seen ist aber nicht
-    erfasst.</p></div>
+    <p>Ob du mit dem Rad schnell ins Grüne kommst. Die Idee ist ein "Picknick im Grünen":
+    ob du mit wenig Aufwand in ein ruhiges Naturgebiet kommst.
+    Gewertet wird der beste erreichbare Ort: Wald, See, Fluss, Hügel oder Aussichtspunkt
+    (aus Satellitendaten, Geländemodell, OpenStreetMap). Hier zählt: je mehr erreichbar
+    ist, desto besser.  Hügelige Natur zählt etwas mehr, vielbesuchte etwas weniger (über
+    nahe Bevölkerungsdichte geschätzt). Nicht gewertet sind Autofahrten (mit dem Auto kann
+    man in Deutschland von fast überall schöne Natur erreichen) und ÖPNV (aus praktikabilität).
+    Zudem ist der Andrang an touristische Orte ist nicht erfasst.</p></div>
 
   <div class="layer"><h3>Hochwassersicherheit</h3>
     <p>Aus europaweiten Hochwasser-Tiefenkarten (JRC/Copernicus) für mehrere
-    Wiederkehrzeiten (alle 10 bis 500 Jahre) — eine Risiko-Schätzung „wie oft × wie
-    tief". Ein seltenes, aber existenzielles Risiko: Hochwasser tötet kaum jemanden,
-    kann aber die ganze Wohnung zerstören. Nur Flüsse mit größerem Einzugsgebiet sind
-    modelliert (kleine Bäche und Starkregen fehlen), Deiche bleiben unberücksichtigt
-    (geschützte Ufer zeigen Restgefahr); fehlende Daten heißen hier „sicher".</p></div>
+    Wiederkehrzeiten (alle 10 bis 500 Jahre) — gewertet wird eine Risikoschätzung darüber,
+    wie häufig und wie schwere Katastrophen hier zu erwarten sind. Nur Flüsse mit größerem
+    Einzugsgebiet sind modelliert (kleine Bäche und Starkregen fehlen), Deiche bleiben
+    unberücksichtigt (geschützte Ufer zeigen Restgefahr.</p></div>
 
   <div class="layer"><h3>Wenig Leerstand</h3>
-    <p>Wie stabil ein Ort ist, statt zu veröden — aus dem Anteil leerstehender
-    Wohnungen (Zensus 2022). Hoher Leerstand deutet auf wegziehende, verfallende
-    Gegenden hin; das ist das Signal, das die Miete allein nicht trägt (günstig kann
-    heißen ländlich-bezahlbar oder ausblutend). Gewertet wird die Bausubstanz, nicht
-    die Menschen. Verlässlich erst auf dem 1-km-Raster; in ländlichen
-    Einfamilienhaus-Gegenden gibt es keinen Wert (zählt dort neutral, hebt und senkt
-    nichts) — kein Ausschluss.</p></div>
+    <p>Eine Schätzung der "Mietgesundheit" eines Ortes — aus dem Anteil leerstehender
+    Wohnungen (Zensus 2022). Hoher Leerstand deutet auf eine verlassene Gegend hin mit
+    alter Bausubstanz hin. Verlässlich auf ca 1-km Genauigkeit;
+    in spärlich besiedelten Gegenden gibt es oft keine Daten.</p></div>
 
   <div class="layer"><h3>Ortsbild</h3>
-    <p>Aus historischen Objekten (Burgen, Stadtmauern,
-    Kapellen …), öffentlicher Kunst und einer gewachsenen, organischen Straßenführung
-    (OpenStreetMap) — eine verwinkelte Altstadt zählt mehr als ein Reißbrett-Raster.
-    Schon eines davon reicht; ein Kunstviertel zählt wie eine Altstadt. Pro Einwohner
-    gewertet, damit kleine historische Städte mithalten. Misst Vorhandensein, nicht
-    Schönheit; OpenStreetMap ist auf dem Land lückenhaft.</p></div>
+    <p>Eine Schätzung dafür, wie viel Arbeit in die Ortsarchitektur gesteckt wurde,
+    geschätzt über historische Objekten (Burgen, Stadtmauern, Kapellen …), öffentlicher
+    Kunst und einer organischen Straßenführung (OpenStreetMap).
+    Pro Einwohner gewertet, damit kleine historische Städte mithalten. Misst Vorhandensein, nicht
+    Schönheit; zudem ist OpenStreetMap ist auf dem Land lückenhaft getagged.</p></div>
 
   <div class="layer"><h3>Schnelles Internet</h3>
     <p>Anteil der Haushalte mit verfügbarem schnellem Internet — ab 100 Mbit/s als
@@ -189,20 +184,19 @@
     der Glasfaser-Ausbau ist blockweise lückig.</p></div>
 
   <div class="layer"><h3>Sonne &amp; Trockenheit</h3>
-    <p>Mehr Sonne, weniger Regen — langjähriges Mittel (1991–2020) des Deutschen
-    Wetterdiensts. Temperatur und Schneetage sind Geschmackssache und darum nicht
-    gewertet, sondern nur als Info im Karten-Tooltip.</p></div>
+    <p>Wertet schönes Wetter — ein langjähriges Mittel (1991–2020) des Deutschen
+    Wetterdiensts von Trockenheit und Sonnenstunden. Temperatur und Schneetage
+    sind Geschmackssache und darum nicht gewertet. Schätzt die Lage grob; lokalwetter
+    kann bis heute teils überraschend sein.</p></div>
 
   <div class="layer"><h3>Wohnform &amp; Alter im Viertel</h3>
     <p>Zwei Vorlieben, keine Qualitäten (Daten: Zensus 2022): wie nah Bebauungsdichte
     und Durchschnittsalter der Nachbarschaft an deinen Wünschen liegen. Die Dichte
-    zählt je km² bewohnter Fläche, nicht je Wabe (so heißen die Sechsecke der Karte),
-    damit der bebaute Stadtrand nicht als Land durchgeht. Beide bewerten nur die
-    Vorliebe — was Dichte im Alltag bedeutet, wird in anderen Ebenen gemessen.</p></div>
+    zählt je km² bewohnter Fläche. Lebensphasen der Bevölkerung wird über Demografie
+    geschätzt (um z.B. eine Familien- oder Studentengegend zu finden).</p></div>
 
   <h2>Was die Karte nicht bewertet — und warum</h2>
-  <p>Diese Lücken sind Absicht. Eine Ebene kommt nur dann hinzu, wenn sie sich fair
-  und flächendeckend messen lässt.</p>
+  <p>Folgende Lücken habe ich untersucht und absichtlich nicht gewertet:</p>
   <ul>
     <li><strong>Jobs &amp; Arbeitsmarkt:</strong> nur teilweise. Wo eine passende
       Stadt oder deine Branche liegt, deckt der »Lebensmittelpunkt« ab (siehe oben).
@@ -216,19 +210,19 @@
       ist praktisch überall gleich, Stickoxide folgen dem Verkehr (schon in »Ruhe«
       enthalten). Wer Stadt, Land, Berge oder Meer für Geruch bevorzugt, kann sich
       in den entsprechenden Orten genauer umsehen..</li>
-    <li><strong>Kriminalität:</strong> die amtlichen Zahlen messen eher
-      die Polizeiarbeit als die Gefahr — wo mehr kontrolliert und angezeigt wird,
-      steht mehr in der Statistik. Dazu nur auf Kreisebene erhoben, für einen
-      Ortsvergleich also zu grob und zu unzuverlässig. Auch Verkehrsunfälle wären als
-      „Sicherheit" trügerisch (sie messen, wo viele Menschen unterwegs sind, nicht das
-      Risiko pro Person) — wir verzichten daher und führen nur das Hochwasserrisiko.</li>
+    <li><strong>Sicherheit und Kriminalität:</strong> untersucht wurden amtliche
+      Deliktzahlen (zu grob und damit nicht nutzbar), demografische Zahlen wie die
+      Arbeitslosigkeit (durch wissenschaftliche Evidenz abgelehnt), und
+      Verkehrssicherheit (zu wenig Daten). Nur das Hochwasserrisiko has sich bisher
+      als gut bewertbar herausgestellt.</li>
   </ul>
 
   <h2>Daten &amp; Datenschutz</h2>
-  <p>Deine Einstellungen (und damit auch der Inhalt eines „Link kopieren“-Links)
-  bleiben <strong>lokal in deinem Browser</strong> — sie werden in der Session- und
-  der lokalen Ablage gespeichert, nie an einen Server gesendet, und du kannst sie
-  jederzeit über deinen Browser löschen. Es gibt kein Tracking und keine Konten.</p>
+  <p>Deine Einstellungen bleiben <strong>lokal in deinem Browser</strong> — sie werden
+  in der Session- und der lokalen Ablage gespeichert, nie an einen Server gesendet,
+  und du kannst sie derzeit über deinen Browser löschen. Es gibt kein Tracking und keine Konten.
+  Auch wenn du "Link kopieren" nutzt wird nichts gespeichert - alle deine Einstellungen stecken
+  dann im Link selbst.</p>
   <p>Beim Laden ruft die Seite von fremden Servern nur die Kartenkacheln (CARTO)
   ab — und, wenn du suchst, den Adressdienst Nominatim (OpenStreetMap). Diese
   Dienste sehen dabei wie bei jedem Seitenaufruf deine IP-Adresse. Die
