@@ -46,8 +46,15 @@ RPS = [10, 20, 30, 40, 50, 75, 100, 200, 500]   # return periods (years)
 P = np.array([1.0 / rp for rp in RPS])           # annual exceedance probability
 
 D0 = 1.0          # depth (m) at which severity = 0.5; sat(d) = d/(d+D0)
-EAS_ANCHOR = 0.04  # expected-annual-severity mapping to flood_score 0 (PROVISIONAL
-#                    — tune against the national distribution once built)
+EAS_ANCHOR = 0.05  # expected-annual-severity that maps to flood_score 0 — about half
+#                    the physical maximum (0.098 = a cell flooded deeply over its whole
+#                    area at EVERY return period). So a place flooding deeply over most
+#                    of its area every ~10 yr scores ~0, and genuinely unprotected deep
+#                    floodplains (Isar/Donau) stay near-veto. The anchor sits ABOVE the
+#                    worst cells' severity, so no hex clips flat onto the floor (a lower
+#                    anchor pins the worst ~2% at exactly 0 and erases gradient there).
+#                    Protected-but-residual urban riverfronts read mildly darkened, not
+#                    vetoed — JRC is defense-agnostic (documented continental-model limit).
 FRAC_FIRST = 0.10  # hex-wet fraction counting as "floods here" for flood_rp_first
 HEX_AREA_M2 = 737327.0  # mean res-8 hexagon area (denominator for wet fraction)
 M_PER_DEG = 111_320.0

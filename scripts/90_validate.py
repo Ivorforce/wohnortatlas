@@ -239,8 +239,11 @@ def main():
           v("flood_depth_hq100", 48.057, 12.220), 2.0, 12.0)
     check("Wasserburg flood penalty (frequent)",
           v("flood_score", 48.057, 12.220), 0.2, 0.75)
+    # an unprotected deep Isar floodplain stays a near-veto. The band tops out at
+    # 0.30 (not lower): EAS_ANCHOR sits at ~half the physical max so the worst cells
+    # keep gradient instead of clipping flat onto 0 (see 16_flood).
     check("Isar floodplain Freising near-veto",
-          v("flood_score", 48.395, 11.740), 0.0, 0.25)
+          v("flood_score", 48.395, 11.740), 0.0, 0.30)
     check("Kolbermoor (Mangfall 2013) floods",
           v("flood_score", 47.849, 12.067), 0.30, 0.85)
     check("Schwabing dry", v("flood_score", 48.1664, 11.5879), 0.85, 1.0)
