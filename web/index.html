@@ -1065,17 +1065,15 @@ const INCOME_MULT = Object.fromEntries(INCOME_LEVELS.map(([k, , m]) => [k, m]));
 // income multiplier ^0.35. This is what lets a low earner trade DOWN to a smaller flat
 // (ceiling = budget÷m² rises) and stay central, instead of only being pushed outward.
 const INCOME_M2 = { unter: 0.90, schnitt: 1.0, ueber: 1.11 };
-// Q3 transport pre-seed from Q1+Q2 (foot is the always-on baseline). The gate
-// fills answers.modes with this when the user reaches Q3 untouched; presetFromAnswers
-// falls back to it so the recipe is well-defined without an explicit Q3 answer.
-function seedModes(household, stadtland) {
+// Transport pre-seed from the Stadt/Land choice (foot is the always-on baseline). The
+// gate fills answers.modes with this when the user reaches the modes step untouched;
+// presetFromAnswers falls back to it so the recipe is well-defined without an explicit
+// modes answer.
+function seedModes(stadtland) {
   let bike = "gern", car = null, oepnv = "koennen";  // carless-cyclist default
   if (stadtland === "innenstadt") oepnv = "gern";  // dense + transit-rich → carless by default; the car wins few trips here and "gar nicht" avoids rescuing car-only spots that contradict the choice
   else if (stadtland === "land") { car = "gern"; oepnv = "koennen"; }
-  else if (stadtland === "stadtrand") {
-    if (household === "familie") car = "gern";       // family at the edge → car
-    else { oepnv = "gern"; car = "koennen"; }         // single/paar → ÖPNV
-  }
+  else if (stadtland === "stadtrand") { oepnv = "gern"; car = "koennen"; }  // edge → ÖPNV, car as fallback
   else if (stadtland === "kleinstadt") car = "koennen";  // small town: a car when needed
   return { bike, car, oepnv };  // egal keeps the carless-cyclist default
 }
@@ -1112,7 +1110,7 @@ function presetFromAnswers(a) {
   // Q3 transport — weight effects of the final mode set. A SEEDED set (Q3 untouched) is
   // itself a smart guess, so with the bundle off its nudges fire only if the user actually
   // touched Q3 — else a do-nothing user would pick up s_quiet etc. and break "rent only".
-  const modes = a.modes || seedModes(a.household, a.stadtland);
+  const modes = a.modes || seedModes(a.stadtland);
   if (quality || a.q3touched) {
     if (modes.oepnv === "gern") { mul("s_oepnv", 1.3); mul("s_anbindung", 1.2); }
     if (modes.car === "gern") mul("s_oepnv", 0.85);
@@ -5954,7 +5952,7 @@ function applyGate() {
   // population pass, so that initial call falls through; this guards re-entrant clicks only.
   if (_bootInFlight && !_bootChunking) { runBootCompute(applyGate).catch(err => console.error(err)); return; }
   const a = { ...answers };
-  if (!answers.q3touched) a.modes = undefined;  // let the recipe seed modes from Q1+Q2
+  if (!answers.q3touched) a.modes = undefined;  // let the recipe seed modes from the Stadt/Land choice
   // "Wenig pendeln" halves the BASELINE-viable set (autoSetBudget → viableCommuteBudget, keep the
   // closest ~half), so anbindungSlack stays the baseline household slack either way — the chip is
   // a flag, not a tighter slack. Familie gets more baseline headroom (trades commute for
@@ -5994,7 +5992,7 @@ function stepHousehold(c) {
   chipRow(c, [["familie", "Familie mit Kindern"], ["paar", "Paar"],
     ["single", "Single / WG"], [null, "Egal"]],
     v => answers.household === v, v => {
-      answers.household = v; applyGate();   // applyGate re-seeds the mode toggles
+      answers.household = v; applyGate();   // re-applies the household weight nudges
       if (refreshGatePriorities) refreshGatePriorities();  // show/hide the family-only kid-walk chip
     });
 }
@@ -6024,7 +6022,7 @@ function stepModes(c) {
     r.appendChild(label); r.appendChild(tri.el);
     rows.appendChild(r);
   }
-  refreshGateModes = () => {  // re-read the seed into the toggles (Q1/Q2 changed)
+  refreshGateModes = () => {  // re-read the seed into the toggles (the Stadt/Land choice changed)
     for (const mkey in setByMode) setByMode[mkey](mkey === "oepnv" ? OEPNV_PREF : (MODE_PREF[mkey] ?? "nicht"));
   };
   c.appendChild(rows);
@@ -6224,8 +6222,8 @@ function renderGate() {
   stepEl.innerHTML = "";
   qBlock(stepEl, "Wo liegt dein Lebensmittelpunkt?", "Ein Ort, der gut erreichbar sein muss — etwa durch Beruf, Familie oder Freunde. Wenn du nichts auswählst, zeigt die Karte ganz Deutschland.", stepTarget);
   qBlock(stepEl, "Wie möchtest du wohnen?", "Nur eine Präferenz, kein Filter.", stepStadtland);
-  qBlock(stepEl, "Für wen planst du?", "Bestimmt Wohnfläche und Alltag.", stepHousehold);
   qBlock(stepEl, "Wie möchtest du täglich unterwegs sein?", "Zu Fuß zählt immer.", stepModes);
+  qBlock(stepEl, "Für wen planst du?", "Bestimmt Wohnfläche und Alltag.", stepHousehold);
   qBlock(stepEl, "Was willst du fürs Wohnen ausgeben?", "Verdienst du vor Ort, oder bringst du dein Einkommen mit?", stepIncome);
   qBlock(stepEl, "Was ist dir besonders wichtig?", "Auch ohne Auswahl werden ausgewogen gute Orte vorgeschlagen. Hier wählst du Prioritäten und Ausschlusskriterien.", stepPriorities);
   qBlock(stepEl, "Standardgewichtung", "Beide standardmäßig aktiv. Abwählen, um nur nach deinen Auswahlen oben zu bewerten.", stepDefaults);
