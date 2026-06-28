@@ -101,9 +101,13 @@ W = {  # monotype ceiling: score if your reach were purely this best-eligible ty
     # not best-eligible, so the surroundings always decide a riverside hex.
     # heath sits at forest tier: an open Calluna heath (the Lüneburger Heide) is a
     # premier tranquil-nature outing, not a sub-meadow afterthought (09 sources
-    # heath from OSM, so it carries real data).
-    "lake": 0.90, "forest": 0.82, "heath": 0.80, "wetland": 0.65, "sights": 0.55,
-    "grass": 0.48, "crop": 0.15,
+    # heath from OSM, so it carries real data). beach sits just below lake — a sand
+    # beach (natural=beach, 03e) is a premier sea outing that credits the visitable
+    # SAND, so North Sea Wattenmeer towns score even where the tidal flat reads as
+    # land (water_share≈0); the protected mudflat itself has no beach tag, so it earns
+    # nothing (you can't roam it anyway).
+    "lake": 0.90, "beach": 0.85, "forest": 0.82, "heath": 0.80, "wetland": 0.65,
+    "sights": 0.55, "grass": 0.48, "crop": 0.15,
 }
 KSAT = {  # saturation midpoint per type: the per-source SMOOTHED share where p hits 0.5
     # forest/grass sit high: the dilate is a MAX, so a small park's dense core cell
@@ -112,14 +116,14 @@ KSAT = {  # saturation midpoint per type: the per-source SMOOTHED share where p 
     # rural forests (share→0.9) stay near 1. lake/wetland keep low midpoints (concave
     # curve) so a small near Weiher still counts.
     "forest": 0.57, "grass": 0.45, "crop": 0.50, "lake": 0.045,
-    "wetland": 0.04, "heath": 0.30,
+    "wetland": 0.04, "heath": 0.30, "beach": 0.04,
 }
 # per-type curve steepness c^a/(c^a+k^a): area types use a steep S-curve (a=2.5)
 # to spread their compressed-but-substantial share; lake/wetland are sparse-
 # but-valuable, so a concave curve (a=1) credits a small-but-near body fairly
 # instead of crushing it to ~0.
 SATEXP = {"forest": 2.5, "grass": 2.5, "crop": 2.5, "heath": 2.5,
-          "lake": 1.0, "wetland": 1.0}
+          "lake": 1.0, "wetland": 1.0, "beach": 1.0}
 LAKE_THR = 0.04    # detect small lakes (a ~0.03 km² Weiher), not just big ones
 BETA = 0.35        # diversity temper on the non-best types (lower → leans toward
 #                    the "is there ONE good place" max; β=0.45 let ubiquitous
@@ -259,6 +263,13 @@ def main():
 
     green = pd.read_parquet(LAYERS / "greenness.parquet")
     g = grid[["h3"]].merge(green, on="h3", how="left")
+    beach_f = INTERIM / "beach.parquet"
+    if beach_f.exists():
+        g["beach_share"] = g["h3"].map(
+            pd.read_parquet(beach_f).set_index("h3")["beach_share"]).fillna(0.0)
+    else:
+        print("WARNING: no beach.parquet (run 03e_beach) — beach type empty")
+        g["beach_share"] = 0.0
     gx, gy = _T.transform(grid["lon"].values, grid["lat"].values)
     cells_list = grid["h3"].tolist()
 
@@ -403,6 +414,7 @@ def main():
         "lake":    reach(lake_vals, "lake", qfactor=recr_q),
         "wetland": reach(g["wetland_share"].fillna(0).values, "wetland"),
         "heath":   reach(g["heath_share"].fillna(0).values,   "heath"),
+        "beach":   reach(g["beach_share"].fillna(0).values,   "beach"),
         # river/stream: best reachable GREEN bank (see bank_q), dilated like the areas.
         # Applied below as a capped BONUS, not a best-eligible type.
         "river":   waterway_reach(river_near),

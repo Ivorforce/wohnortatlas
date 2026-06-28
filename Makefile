@@ -159,7 +159,12 @@ $(INT)/schools_points.parquet: $(INT)/pois.parquet $(RAW)/jedeschule.csv $(INT)/
 $(LAY)/schools.parquet $(LAY)/family.parquet: $(INT)/pois.parquet $(INT)/grid.parquet $(INT)/schools_points.parquet
 	$(PY) scripts/12_schools_family.py
 
-$(LAY)/nature.parquet: $(INT)/pois.parquet $(LAY)/greenness.parquet
+# natural=beach → per-hex beach_share for the Nature layer (sea outing where the
+# Wattenmeer tidal flat defeats water_share). Cheap osmium pre-filter + sampling.
+$(INT)/beach.parquet: $(INT)/region-filtered.osm.pbf scripts/03e_beach.py
+	$(PY) scripts/03e_beach.py
+
+$(LAY)/nature.parquet: $(INT)/pois.parquet $(LAY)/greenness.parquet $(INT)/beach.parquet
 	$(PY) scripts/13_nature.py
 
 $(LAY)/oepnv.parquet: $(INT)/gtfs_region.zip $(INT)/grid.parquet

@@ -346,6 +346,14 @@ def main():
     check("Müritz (Waren) lakes nature high", v("s_nature", 53.518, 12.68), 0.6, 1.0)
     check("Magdeburger Börde flat-crop low", v("s_nature", 52.05, 11.4), 0.0, 0.3)
     check("Berlin Mitte urban nature low", v("s_nature", 52.52, 13.4), 0.0, 0.2)
+    # coastal beaches as a nature outing (natural=beach, 03e → 13's beach type). The
+    # North Sea Wattenmeer towns read as flat land in WorldCover (water_share≈0), so the
+    # beach is what credits them; Baltic open-water resorts score premier. St-Peter-
+    # Ording (town set back ~2 km behind the flats) is the headline fix (was p59/0.59).
+    check("Sylt Westerland beach nature high", v("s_nature", 54.906, 8.295), 0.75, 1.01)
+    check("Timmendorfer Strand beach high", v("s_nature", 53.999, 10.778), 0.80, 1.01)
+    check("Warnemünde beach high", v("s_nature", 54.178, 12.083), 0.65, 1.0)
+    check("St-Peter-Ording beach lifted", v("s_nature", 54.298, 8.648), 0.50, 0.90)
 
     print("== national: quiet ==")
     check("Berlin Kreuzberg loud", v("s_quiet", 52.5, 13.403), 0.0, 0.2)
