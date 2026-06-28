@@ -325,6 +325,131 @@ def main():
         print("WARN senioren anchor not found in index.html")
         FAILED.append("senioren anchor regex")
 
+    # === national ground-truth anchors (knowledge-based audit) =================
+    # Knowledge-grounded spot checks at ICONIC places across Germany, in both
+    # directions, verifying each layer delivers its INTENT nationwide — a famous
+    # place reading wrong is a real defect even when the code matches its spec
+    # (the Lüneburger-Heide heath gap was this class). The Munich-centric anchors
+    # above test calibration; these test national coverage. Generous bands: catch
+    # a collapse or inversion, not noise.
+    print("== national: greenness ==")
+    check("Grunewald forest (Berlin) green", v("s_green", 52.484, 13.23), 0.8, 1.0)
+    check("Blankenese leafy (Hamburg) green", v("s_green", 53.557, 9.815), 0.7, 1.0)
+    check("Ludwigshafen BASF sealed low", v("s_green", 49.515, 8.425), 0.0, 0.3)
+    check("Berlin Mitte core sealed low", v("s_green", 52.52, 13.405), 0.0, 0.32)
+    check("Mannheim Quadrate sealed low", v("s_green", 49.488, 8.466), 0.0, 0.35)
+
+    print("== national: nature ==")
+    check("Berchtesgaden Alps nature high", v("s_nature", 47.605, 12.99), 0.7, 1.0)
+    check("Bodensee (Konstanz) nature high", v("s_nature", 47.69, 9.18), 0.62, 1.0)
+    check("Schwarzwald (Titisee) nature high", v("s_nature", 47.9, 8.15), 0.62, 1.0)
+    check("Müritz (Waren) lakes nature high", v("s_nature", 53.518, 12.68), 0.6, 1.0)
+    check("Magdeburger Börde flat-crop low", v("s_nature", 52.05, 11.4), 0.0, 0.3)
+    check("Berlin Mitte urban nature low", v("s_nature", 52.52, 13.4), 0.0, 0.2)
+
+    print("== national: quiet ==")
+    check("Berlin Kreuzberg loud", v("s_quiet", 52.5, 13.403), 0.0, 0.2)
+    check("Köln Zentrum loud", v("s_quiet", 50.938, 6.96), 0.0, 0.2)
+    check("Mecklenburg rural quiet", v("s_quiet", 53.42, 12.7), 0.92, 1.0)
+    check("Altmark rural quiet", v("s_quiet", 52.76, 11.23), 0.88, 1.0)
+    check("Boppard Mittelrheintal rail noise", v("rail_penalty", 50.231, 7.59), 0.5, 1.0)
+
+    print("== national: rent ==")
+    check("München most expensive", v("rent_cal", 48.1374, 11.5755), 16, 30)
+    check("Frankfurt expensive", v("rent_cal", 50.1109, 8.6821), 13, 24)
+    check("Görlitz cheap", v("rent_cal", 51.1561, 14.9876), 4, 9)
+    check("Salzgitter cheap", v("rent_cal", 52.1503, 10.3594), 4, 9)
+
+    print("== national: density ==")
+    check("Berlin Kreuzberg dense", v("pop_inhabited_dens", 52.499, 13.403), 7000, 40000)
+    check("München metro catchment large", v("catchment_pop", 48.1372, 11.5755), 60000, 400000)
+    check("Müritz remote catchment small", v("catchment_pop", 53.4, 12.7), 0, 3000)
+    check("Dachau Speckgürtel catchment", v("catchment_pop", 48.26, 11.434), 9000, 80000)
+
+    print("== national: age ==")
+    check("Suhl oldest (avg age)", v("avg_age", 50.609, 10.693), 47, 58)
+    check("Baden-Baden 65+ share high", v("share_65plus", 48.761, 8.241), 0.28, 0.46)
+    check("Heidelberg young (uni city)", v("avg_age", 49.398, 8.672), 33, 42)
+    check("Freiburg young (uni city)", v("avg_age", 47.999, 7.842), 34, 43)
+
+    print("== national: broadband ==")
+    # Flensburg/SH fibre high; Saxon-Switzerland copper low; Berlin FTTH-laggard
+    # (cable-served but little fibre) — the counter-intuitive German reality.
+    check("Flensburg fibre high", v("s_broadband", 54.7937, 9.4469), 0.8, 1.01)
+    check("Saxon Switzerland copper low", v("s_broadband", 50.92, 14.08), -0.01, 0.55)
+    check("Berlin FTTH laggard", v("ftth_share", 52.52, 13.405), -0.01, 0.7)
+
+    print("== national: climate ==")
+    check("Kaiserstuhl warm/sunny high", v("s_climate", 48.05, 7.64), 0.72, 0.95)
+    check("Freiburg warm/sunny high", v("s_climate", 47.995, 7.85), 0.66, 0.92)
+    check("Harz (Braunlage) cold/wet low", v("s_climate", 51.73, 10.61), 0.1, 0.42)
+    check("Oberstdorf Alps cold/wet low", v("s_climate", 47.41, 10.28), 0.12, 0.45)
+    check("Berlin dry-mild mid-high", v("s_climate", 52.52, 13.4), 0.62, 0.9)
+
+    print("== national: flood ==")
+    check("Koblenz Deutsches Eck flood-risk", v("flood_score", 50.364, 7.6058), 0.0, 0.55)
+    check("Magdeburg Elbe flood-risk", v("flood_score", 52.126, 11.65), 0.0, 0.6)
+    check("Köln-Deutz HQ100 depth", v("flood_depth_hq100", 50.9364, 6.9745), 2, 12)
+    check("Freudenstadt upland safe", v("flood_score", 48.4634, 8.4117), 0.99, 1.0001)
+    check("Annaberg upland safe", v("flood_score", 50.579, 13.001), 0.99, 1.0001)
+
+    print("== national: vacancy ==")
+    check("Görlitz high vacancy", v("vacancy_pct", 51.152, 14.987), 9, 22)
+    check("Pirmasens high vacancy", v("vacancy_pct", 49.201, 7.604), 8, 22)
+    check("Münster tight market", v("vacancy_pct", 51.962, 7.626), 0.3, 4.5)
+    check("Freiburg tight market", v("vacancy_pct", 47.995, 7.852), 0.3, 4.5)
+    check("Görlitz low vacancy_score", v("vacancy_score", 51.152, 14.987), 0.05, 0.55)
+
+    print("== national: character ==")
+    check("Rothenburg o.d.T. character high", v("s_character", 49.3779, 10.1787), 0.55, 1.05)
+    check("Görlitz character high", v("s_character", 51.1547, 14.9886), 0.4, 1.0)
+    check("Quedlinburg character high", v("s_character", 51.7886, 11.1377), 0.4, 1.0)
+    check("Bamberg character high", v("s_character", 49.8917, 10.8869), 0.4, 1.0)
+    check("Lübeck character high", v("s_character", 53.8655, 10.6866), 0.4, 1.0)
+    check("Wismar character high", v("s_character", 53.8917, 11.4653), 0.35, 1.0)
+
+    print("== national: ÖPNV ==")
+    check("Hamburg core ÖPNV high", v("s_oepnv", 53.5538, 9.993), 0.55, 1.0)
+    check("München core ÖPNV high", v("s_oepnv", 48.1374, 11.5755), 0.5, 1.0)
+    check("Berlin Alex ÖPNV high", v("s_oepnv", 52.5219, 13.4132), 0.5, 1.0)
+    check("Womrath (Hunsrück) ÖPNV floor", v("deps_per_day", 49.86, 7.46), 0, 40)
+
+    print("== national: freizeit reach ==")
+    check("Berlin culture reach high", v("reach_kultur_car", 52.52, 13.405), 0.8, 1.0)
+    check("München culture transit reach high", v("reach_kultur_transit", 48.1372, 11.5755), 0.7, 1.0)
+    check("Berlin going-out reach high", v("reach_activity_car", 52.52, 13.405), 0.8, 1.0)
+    check("Bayerischer Wald culture reach low", v("reach_kultur_car", 48.92, 13.4), 0.0, 0.06)
+    check("Starnberg golf reach", v("reach_golf_car", 47.997, 11.34), 0.35, 0.85)
+
+    print("== national: schools ==")
+    check("München Gymnasium near", v("t_gymnasium_min", 48.1372, 11.5755), 0, 18)
+    check("Berlin Gymnasium near", v("t_gymnasium_min", 52.52, 13.405), 0, 18)
+    check("München KiTa supply", v("kita_supply", 48.1372, 11.5755), 30, 100000)
+    check("Lychen rural Gymnasium far", v("t_gymnasium_min", 53.213, 13.32), 40, 200)
+    check("München Grundschule near", v("t_grundschule_min", 48.1372, 11.5755), 0, 12)
+
+    print("== national: nahversorgung ==")
+    check("München doctor near", v("t_doctor_min", 48.1372, 11.5755), 0, 8)
+    check("Köln supermarket near", v("t_vollsort_min", 50.9384, 6.956), 0, 15)
+    check("Bayerischer Wald pharmacy far", v("t_pharmacy_min", 48.97, 13.4), 40, 220)
+    check("Altmark pharmacy far", v("t_pharmacy_min", 52.75, 11.55), 60, 230)
+
+    print("== national: jobs by sector (Kreis location quotient) ==")
+    # The map must reflect where each branch actually concentrates. LQ = sector
+    # share in the Kreis / national share; >1.3 = a real specialisation. From
+    # jobs_kreis (GENESIS 52111) by hardcoded AGS — no spatial join needed.
+    jk = pd.read_parquet(LAYERS / "jobs_kreis.parquet").set_index("kreis_ags")
+    natshare = jk.sum() / jk.sum().sum()
+
+    def lq(ags, sect):
+        row = jk.loc[ags]
+        return float((row / row.sum())[sect] / natshare[sect])
+
+    check("Wolfsburg industrie specialisation (VW)", lq("03103", "industrie"), 1.8, 5.0)
+    check("Karlsruhe IT specialisation", lq("08212", "it"), 1.8, 5.0)
+    check("Frankfurt finance specialisation", lq("06412", "finanz_dienste"), 1.4, 3.0)
+    check("Garmisch hospitality specialisation", lq("09180", "gastgewerbe"), 1.8, 5.0)
+
     print("== structure ==")
     pop = sc["population"].fillna(0)
     check("inhabited share (pop>=10)", float((pop >= 10).mean()), 0.40, 0.55)
