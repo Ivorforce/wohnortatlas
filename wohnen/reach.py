@@ -10,6 +10,7 @@ Kept in one place so the routing/derivation scripts don't each re-implement them
 """
 
 import datetime as dt
+import json
 import os
 import threading
 import types
@@ -33,6 +34,21 @@ MODE_DECAY = {
     "walk": ["walk_min"],
     "transit": ["transit_hbf_min", "transit_bike_min"],
 }
+
+
+def load_departures():
+    """(departure, return-leg) datetimes from interim/departure.json. The return leg is
+    fixed at 17:00 — the reversed evening commute, a valid round-trip proxy."""
+    departure = dt.datetime.fromisoformat(
+        json.loads((INTERIM / "departure.json").read_text())["departure"])
+    return departure, departure.replace(hour=17, minute=0, second=0, microsecond=0)
+
+
+def percentile_index(n_iter):
+    """R5's findPercentileIndex(nIter, 50): the median index over the range-raptor
+    departure-minute iterations (pairs with door_percentile)."""
+    return int(np.ceil(0.5 * n_iter) - 1)
+
 
 _t04 = None
 

@@ -21,7 +21,6 @@ Usage: 04d_swim.py [--sample N]   (route to a cell sample; no write)
 
 import concurrent.futures
 import datetime as dt
-import json
 import os
 import sys
 from pathlib import Path
@@ -44,8 +43,8 @@ from scipy.spatial import cKDTree
 from wohnen.config import LAYERS, INTERIM, CAR_CONGESTION, CAR_PARK_MIN
 from wohnen.freizeit import SOURCES, point_decay
 from wohnen.reach import (
-    door_percentile, gather_window, honest_stop_times, load_egress, morton_order,
-    setup_decomp_net)
+    door_percentile, gather_window, honest_stop_times, load_departures, load_egress,
+    morton_order, percentile_index, setup_decomp_net)
 
 # Per-spot pull = mass·point_decay(t) (flat to ~5 min, generalized-Gaussian tail; the
 # shared "need just one" model in wohnen.freizeit). Both the gravity SUM and the per-cell
@@ -144,7 +143,7 @@ def route_source(ctx, g_walk_all, cell_index, cells_gdf, cell_ids, tree,
             t2s = honest_stop_times(ctx, b_lat[i], b_lon[i], HORIZON, evening)
             if t2s is None:
                 return None
-            pidx = int(np.ceil(0.5 * t2s.shape[0]) - 1)       # R5 findPercentileIndex(nIter, 50)
+            pidx = percentile_index(t2s.shape[0])
             door = door_percentile(t2s, g_walk_all, n, pidx, HORIZON)
             m = np.isfinite(door)
             return (np.nonzero(m)[0], b_mass[i] * point_decay(door[m]), door[m]) if m.any() else None
@@ -174,9 +173,7 @@ RAW_NPZ = "reach_spots.npz"  # per-source×mode gravity sum + nearest-spot time 
 
 
 def main():
-    departure = dt.datetime.fromisoformat(
-        json.loads((INTERIM / "departure.json").read_text())["departure"])
-    evening = departure.replace(hour=17, minute=0, second=0, microsecond=0)
+    departure, evening = load_departures()
 
     grid = pd.read_parquet(INTERIM / "grid.parquet")
     if _SAMPLE:

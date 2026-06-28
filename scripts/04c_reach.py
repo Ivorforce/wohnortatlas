@@ -27,8 +27,6 @@ Usage: 04c_reach.py [--sample N]   (route only N centers to a cell sample; no wr
 """
 
 import concurrent.futures
-import datetime as dt
-import json
 import os
 import sys
 from pathlib import Path
@@ -49,8 +47,8 @@ from wohnen.config import (
     LAYERS, INTERIM, CAR_CONGESTION, CAR_PARK_MIN, TRAVEL_SENTINEL_MIN,
 )
 from wohnen.reach import (
-    MODE_COLS, door_percentile, gather_window, honest_stop_times, load_egress,
-    morton_order, setup_decomp_net)
+    MODE_COLS, door_percentile, gather_window, honest_stop_times, load_departures,
+    load_egress, morton_order, percentile_index, setup_decomp_net)
 
 # r5py is pulled in only when routing (setup_decomp_net → the JDK-21 assertion); set in
 # main. This script ONLY routes + persists the per-center×cell reach to reach_centers.npz;
@@ -93,7 +91,7 @@ def _transit_decompose(centers, cells, dest_erows, evening, bike_hbf_df):
         t2s = honest_stop_times(_CTX, lat[i], lon[i], HORIZON_MIN, evening)
         if t2s is None:
             return
-        pidx = int(np.ceil(0.5 * t2s.shape[0]) - 1)             # R5 findPercentileIndex(nIter, 50)
+        pidx = percentile_index(t2s.shape[0])
         th[i] = door_percentile(t2s, g_walk, n, pidx, HORIZON_MIN)
         tb[i] = door_percentile(t2s, g_bike, n, pidx, HORIZON_MIN)
 
@@ -194,9 +192,7 @@ def _assemble(parts: Path, cids_all, cell_ids):
 
 def main():
     sample = _SAMPLE
-    departure = dt.datetime.fromisoformat(
-        json.loads((INTERIM / "departure.json").read_text())["departure"])
-    evening = departure.replace(hour=17, minute=0, second=0, microsecond=0)
+    departure, evening = load_departures()
 
     centers = pd.read_parquet(LAYERS / "centers.parquet")
     grid = pd.read_parquet(INTERIM / "grid.parquet")
