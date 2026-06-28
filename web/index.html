@@ -1734,7 +1734,7 @@ function updateTargetUI() {  // rebuild the shrunk target <select>: fixed entrie
   // all lazy chunks, listed uniformly (the backend manifest carries the labels + gate).
   const fields = (typeof BRANCHES !== "undefined" && BRANCHES) ? BRANCHES : [];
   targetSel.innerHTML = `<option value="">— kein Ziel —</option>`
-    + (city ? `<option value="${city.id}">${targetLabel(city.id, city.name)}</option>` : "")
+    + (city ? `<option value="${city.id}" translate="no">${targetLabel(city.id, city.name)}</option>` : "")
     + `<option value="__map__">Auf Karte auswählen…</option>`
     + (fields.length ? `<optgroup label="Nach Beruf / Branche">`
       + fields.map(b => `<option value="${b.id}">${b.label}</option>`).join("")
@@ -3369,7 +3369,7 @@ function headerHTML({ sm, mix }) {
     sub += ` · Gesamtwertung ${((mix(composite) ?? 0) * 100).toFixed(0)}`;
   const place = sm.label ? sm.label
     : CELLS.label ? `≈ ${CELLS.label[sm.cells[0]]}` : "";
-  return `<div class="tt-head"><span class="tt-place">${place}</span>
+  return `<div class="tt-head"><span class="tt-place" translate="no">${place}</span>
       <span class="tt-big" style="color:${bigCol}">${big}</span></div>
     <div class="tt-sub">${sub}</div>`;
 }
@@ -3731,7 +3731,7 @@ function onTargetHover(info) {
     : o.part ? "Stadtteil — Klick setzt ihn als Ziel"
     : isMultiCenterCity(o.id) ? "ganze Stadt — hineinzoomen für einzelne Stadtteile"
     : "Klick — als Lebensmittelpunkt setzen";
-  tooltip.innerHTML = `<b>${targetLabel(o.id, o.name)}</b><div class="tt-foot">${foot}</div>`;
+  tooltip.innerHTML = `<b translate="no">${targetLabel(o.id, o.name)}</b><div class="tt-foot">${foot}</div>`;
   tooltip.style.display = "block";
   positionTooltip(info);
 }
@@ -3814,10 +3814,10 @@ function renderSuche(msg) {
   if (nc && nc.partId && cityNamedOver(searchQuery, nc.city.name, nc.partName)) {
     const d = nc.partName.split(" – ").pop();   // query named the city → whole city leads
     prim = { id: nc.city.id, name: nc.city.name };
-    sec = { id: nc.partId, label: `Nur ${d} als Lebensmittelpunkt`, on: `Lebensmittelpunkt (${d})` };
+    sec = { id: nc.partId, label: `Nur ${noTr(d)} als Lebensmittelpunkt`, on: `Lebensmittelpunkt (${noTr(d)})` };
   } else if (nc && nc.partId) {
     prim = { id: nc.partId, name: nc.partName };   // default: the nearest corner leads
-    sec = { id: nc.city.id, label: `Ganz ${nc.city.name} als Lebensmittelpunkt`, on: `Lebensmittelpunkt (ganz ${nc.city.name})` };
+    sec = { id: nc.city.id, label: `Ganz ${noTr(nc.city.name)} als Lebensmittelpunkt`, on: `Lebensmittelpunkt (ganz ${noTr(nc.city.name)})` };
   } else if (nc) {
     prim = { id: nc.city.id, name: nc.city.name };  // single-center town: one option
   }
@@ -3826,13 +3826,13 @@ function renderSuche(msg) {
   else if (!nc) targetBtns = `<span class="sx-btn off">Kein Lebensmittelpunkt in Reichweite</span>`;
   else {
     targetBtns = targetKey === prim.id
-      ? `<span class="sx-btn on">Lebensmittelpunkt (${targetLabel(prim.id, prim.name)})</span>`
-      : `<a href="#" class="sx-btn" id="searchtarget">Als Lebensmittelpunkt (${targetLabel(prim.id, prim.name)})</a>`;
+      ? `<span class="sx-btn on">Lebensmittelpunkt (${noTr(targetLabel(prim.id, prim.name))})</span>`
+      : `<a href="#" class="sx-btn" id="searchtarget">Als Lebensmittelpunkt (${noTr(targetLabel(prim.id, prim.name))})</a>`;
     if (sec) targetBtns += targetKey === sec.id
       ? `<span class="sx-btn sub on">${sec.on}</span>`
       : `<a href="#" class="sx-btn sub" id="searchtarget2">${sec.label}</a>`;
   }
-  el.innerHTML = `<div class="sx-title">${searchLabel}</div>`
+  el.innerHTML = `<div class="sx-title" translate="no">${searchLabel}</div>`
     + (compareBtn || targetBtns ? `<div class="sx-actions">${compareBtn}${targetBtns}</div>` : "")
     + (searchSpec == null
         ? `<div class="det-empty">Außerhalb des Kartengebiets.</div>`
@@ -4874,6 +4874,8 @@ function renderPins() {
 // so its values reflect the exact street location, not just the containing hex
 // (matters on hex borders). These accessors read either kind.
 function pinLabel(p) { return typeof p === "number" ? ((CELLS.label && CELLS.label[p]) || "—") : (p.label || "—"); }
+// place names are proper nouns: keep browser auto-translate from mangling them ("Essen"→"Eat")
+function noTr(s) { return `<span translate="no">${s}</span>`; }
 function pinHome(p) { return typeof p === "number" ? p : p.cells[0]; }  // cell for filter/marker checks
 function pinPos(p) {
   if (typeof p !== "number") return p.pos;
@@ -4908,7 +4910,7 @@ function multiBarHTML(pins) {
   pins.forEach((p, n) => {
     const flt = visible[pinHome(p)] ? "" : ` <span style="color:#c92a2a">(ausgebl.)</span>`;
     head += `<div class="cmp-colhead${n === best ? " cmp-best" : ""}">`
-      + `<div class="cmp-name"><span class="cmp-nlabel">${n + 1}. ${pinLabel(p)}${flt}</span>`
+      + `<div class="cmp-name"><span class="cmp-nlabel">${n + 1}. ${noTr(pinLabel(p))}${flt}</span>`
       + `<a href="#" class="cmp-unpin" data-pin="${n}" title="lösen">✕</a></div>`
       + `<div class="cmp-score" style="color:${pctColor(comps[n])}">${Math.round(comps[n] * 100)}</div>`
       + verdictTagHTML(p) + `</div>`;
@@ -5054,9 +5056,9 @@ function compareBarsHTML(aSpec, bSpec, liveMode) {
   // the live hover in liveMode → number (and ✕) only when it's a real pin
   const rightCol = bAcc == null
     ? nameCol(`<span class="muted">noch keine</span>`, null, "", null, "is-b")
-    : nameCol(pinLabel(bSpec), bAcc.mix(composite) ?? 0, liveMode ? "" : "2. ", liveMode ? null : 1, "is-b", bSpec);
+    : nameCol(noTr(pinLabel(bSpec)), bAcc.mix(composite) ?? 0, liveMode ? "" : "2. ", liveMode ? null : 1, "is-b", bSpec);
   const head = `<div class="det-cmphead">`
-    + nameCol(pinLabel(aSpec), aComp, "1. ", 0, "is-a", aSpec)
+    + nameCol(noTr(pinLabel(aSpec)), aComp, "1. ", 0, "is-a", aSpec)
     + rightCol
     + `</div>`
     + `<div class="cmp-axis"><span>◀ schlechter</span>`
