@@ -11,6 +11,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+import h3
+import numpy as np
 import pandas as pd
 import pyogrio
 
@@ -81,6 +83,45 @@ def main():
     out = grid[["h3"]].copy()
     for label, series in agg.items():
         out[label] = out["h3"].map(series)
+
+    # A populated hex can read worst-in-nation broadband two ways: its representative
+    # point misses the served-cell aggregation (NaN), or the Breitbandatlas reports an
+    # isolated 0 while every inhabited neighbour is well served. Both are false "internet
+    # deserts" inside covered areas — broadband rolls out street-by-street, so a hex fully
+    # enclosed by served hexes cannot really be unserved. Repair from inhabited served
+    # neighbours: a NaN cell fills from any >=2 of them; a genuine-0 cell is repaired only
+    # when strongly contradicted (>=4 neighbours, well-served median, large gap), so real
+    # coverage edges and true low-coverage clusters are left untouched.
+    cols = list(SHARES)
+    W = np.array([0.5, 0.3, 0.2])              # share weights -> bb_score
+    cells = out["h3"].to_numpy()
+    pos = {c: i for i, c in enumerate(cells)}
+    V = out[cols].to_numpy(dtype=float)
+
+    pop = pd.read_parquet(LAYERS / "population.parquet",
+                          columns=["h3", "population"]).set_index("h3")["population"]
+    inhab = (out["h3"].map(pop).fillna(0) >= 10).to_numpy()
+
+    for _ in range(3):
+        bb = np.where(np.isnan(V[:, 0]), np.nan, V @ W)
+        cand = np.where(inhab & (np.isnan(bb) | (bb <= 0.1)))[0]
+        fills = []
+        for i in cand:
+            nb = [V[pos[r]] for r in h3.grid_disk(cells[i], 1)
+                  if r != cells[i] and r in pos and inhab[pos[r]]
+                  and not np.isnan(V[pos[r], 0])]
+            if len(nb) < 2:
+                continue
+            nb = np.array(nb)
+            nmed = float(np.median(nb @ W))
+            outlier = len(nb) >= 4 and nmed >= 0.5 and bb[i] <= nmed - 0.4
+            if np.isnan(bb[i]) or outlier:
+                fills.append((i, nb.mean(axis=0)))
+        if not fills:
+            break
+        for i, vec in fills:
+            V[i] = vec
+    out[cols] = V
 
     s100 = out["share_100"].fillna(0)
     s1000 = out["share_1000"].fillna(0)
