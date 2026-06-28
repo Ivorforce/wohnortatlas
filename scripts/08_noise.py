@@ -19,11 +19,11 @@ import geopandas as gpd
 import numpy as np
 import pandas as pd
 import rasterio
-from pyproj import Transformer
 from scipy.spatial import cKDTree
 
 from wohnen.config import CACHE, EBA_WFS, INTERIM, LAYERS, UBA_NOISE_WMS
 from wohnen.dl import cached_download, cached_get_json
+from wohnen.h3util import disk_mean, utm32_transformer
 from wohnen.norm import clip01
 
 ROAD_W = {"motorway": 1.0, "trunk": 0.8, "primary": 0.5, "secondary": 0.25,
@@ -32,7 +32,7 @@ ROAD_W = {"motorway": 1.0, "trunk": 0.8, "primary": 0.5, "secondary": 0.25,
 # dB anchor shared by every source: Lden 55 -> 0 penalty, 70 -> 1.0.
 DB_LO, DB_SPAN = 55.0, 15.0
 
-_T25832 = Transformer.from_crs(4326, 25832, always_xy=True)
+_T25832 = utm32_transformer()
 
 
 def to_25832(lon, lat):
@@ -338,17 +338,8 @@ def main():
     if demo.exists():
         pop = grid[["h3"]].merge(pd.read_parquet(demo)[["h3", "population"]],
                                  on="h3", how="left")["population"].fillna(0)
-        idx = {c: i for i, c in enumerate(grid["h3"])}
         pv = pop.values.astype(float)
-        smooth = pv.copy()
-        cnt = np.ones(len(pv))
-        for i, c in enumerate(grid["h3"]):
-            for nb in h3.grid_ring(c, 1):
-                j = idx.get(nb)
-                if j is not None:
-                    smooth[i] += pv[j]
-                    cnt[i] += 1
-        smooth /= cnt
+        smooth = disk_mean(pv, grid["h3"])
         urban_penalty = clip01((smooth / 10_000) ** 0.7)
     else:
         print("NOTE: demographics layer missing, urban noise term skipped")

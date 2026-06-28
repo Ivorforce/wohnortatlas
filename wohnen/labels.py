@@ -2,15 +2,15 @@
 
 import numpy as np
 import pandas as pd
-from pyproj import Transformer
 from scipy.spatial import cKDTree
 
 from .config import INTERIM
+from .h3util import utm32_transformer
 
 FINE = ["suburb", "neighbourhood", "village", "town", "city"]
 FINE_RADIUS_M = 1500.0
 
-_T = Transformer.from_crs(4326, 25832, always_xy=True)
+_T = utm32_transformer()
 
 
 def labels_for_points(lat, lon) -> np.ndarray:

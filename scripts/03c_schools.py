@@ -22,15 +22,15 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import numpy as np
 import pandas as pd
-from pyproj import Transformer
 from scipy.spatial import cKDTree
 
 from wohnen.config import INTERIM, RAW
+from wohnen.h3util import utm32_transformer
 from wohnen.io import write_parquet_if_changed
 from wohnen.schools import TRACKS, js_buckets, osm_buckets
 
 MATCH_M = 150.0  # a JedeSchule and an OSM school of the same track within this = same place
-_T = Transformer.from_crs(4326, 25832, always_xy=True)
+_T = utm32_transformer()
 
 
 def _xy(lon, lat):

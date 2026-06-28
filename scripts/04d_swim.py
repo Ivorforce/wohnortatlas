@@ -37,11 +37,11 @@ import geopandas as gpd
 import h3
 import numpy as np
 import pandas as pd
-from pyproj import Transformer
 from scipy.spatial import cKDTree
 
 from wohnen.config import LAYERS, INTERIM, CAR_CONGESTION, CAR_PARK_MIN
 from wohnen.freizeit import SOURCES, point_decay
+from wohnen.h3util import utm32_transformer
 from wohnen.reach import (
     door_percentile, gather_window, honest_stop_times, load_departures, load_egress,
     morton_order, percentile_index, setup_decomp_net)
@@ -62,7 +62,7 @@ _WORKERS = int(os.environ.get("REACH_TRANSIT_WORKERS", str(max(4, (os.cpu_count(
 # — ICE ~250 km); it decomposes to ALL cells. Gravity accumulates into the full grid.
 MODE_WINDOW_KM = {"foot": 8.0, "bike": 25.0, "car": 150.0}   # ≥ each mode's 60-min reach
 SPOT_BATCH = int(os.environ.get("REACH_SPOT_BATCH", "64"))
-_T25832 = Transformer.from_crs(4326, 25832, always_xy=True)  # metres, good over DE
+_T25832 = utm32_transformer()
 
 r5py = None  # set in main from the decomposition context (matrix60 reads it)
 

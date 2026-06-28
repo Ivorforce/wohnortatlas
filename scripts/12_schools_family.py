@@ -8,14 +8,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import h3
 import numpy as np
 import pandas as pd
-from pyproj import Transformer
 from scipy.spatial import cKDTree
 
 from wohnen.config import (BIKE_KMH, CELL_RMS_M, DETOUR_FACTOR, INTERIM,
                            LAYERS, WALK_KMH)
-from wohnen.h3util import disk_weighted_sum, points_to_cells
+from wohnen.h3util import disk_weighted_sum, points_to_cells, utm32_transformer
 
-_T = Transformer.from_crs(4326, 25832, always_xy=True)
+_T = utm32_transformer()
 
 
 def cell_samples(cells, gx, gy) -> np.ndarray:

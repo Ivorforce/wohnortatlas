@@ -14,6 +14,19 @@ RES8_STEP_KM = 0.93
 _PAIR_RMS_KM = CELL_RMS_M * np.sqrt(2) / 1000
 
 
+_utm32 = None
+
+
+def utm32_transformer():
+    """Cached WGS84 (lon/lat) -> UTM32N (EPSG:25832) transformer — metres, accurate over
+    Germany. always_xy=True, so it takes/returns coordinates in lon, lat order."""
+    global _utm32
+    if _utm32 is None:
+        from pyproj import Transformer
+        _utm32 = Transformer.from_crs(4326, 25832, always_xy=True)
+    return _utm32
+
+
 def bbox_cells(bbox=BBOX, res=H3_RES) -> list[str]:
     poly = shapely.geometry.box(*bbox)
     return sorted(h3.geo_to_cells(poly, res))
@@ -41,6 +54,27 @@ def disk_median(values: pd.Series, k: int = 1, min_count: int = 1) -> pd.Series:
         nb = [vdict[c] for c in h3.grid_disk(cell, k) if c in vdict]
         out[cell] = float(np.median(nb)) if len(nb) >= min_count else np.nan
     return pd.Series(out).reindex(values.index)
+
+
+def disk_mean(values, grid, k: int = 1) -> np.ndarray:
+    """Flat mean of each cell's own value plus its in-`grid` neighbours out to ring k.
+
+    values: array aligned positionally to `grid` (a cell list/Series). A neighbour absent
+    from `grid` is skipped, so edge cells simply average over fewer; the cell itself always
+    counts. Unweighted — unlike disk_gaussian_mean (Gaussian) — for plain k=1 smoothing.
+    """
+    v = np.asarray(values, dtype=float)
+    idx = {c: i for i, c in enumerate(grid)}
+    out = v.copy()
+    cnt = np.ones(len(v))
+    for i, c in enumerate(grid):
+        for r in range(1, k + 1):
+            for nb in h3.grid_ring(c, r):
+                j = idx.get(nb)
+                if j is not None:
+                    out[i] += v[j]
+                    cnt[i] += 1
+    return out / cnt
 
 
 def disk_weighted_sum(

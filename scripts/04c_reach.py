@@ -40,12 +40,12 @@ _SAMPLE = int(sys.argv[sys.argv.index("--sample") + 1]) if "--sample" in sys.arg
 import geopandas as gpd
 import numpy as np
 import pandas as pd
-from pyproj import Transformer
 from scipy.spatial import cKDTree
 
 from wohnen.config import (
     LAYERS, INTERIM, CAR_CONGESTION, CAR_PARK_MIN, TRAVEL_SENTINEL_MIN,
 )
+from wohnen.h3util import utm32_transformer
 from wohnen.reach import (
     MODE_COLS, door_percentile, gather_window, honest_stop_times, load_departures,
     load_egress, morton_order, percentile_index, setup_decomp_net)
@@ -71,7 +71,7 @@ BATCH = int(os.environ.get("REACH_BATCH", "64"))
 # dropped; ~Munich-map radius. Batches are spatially sorted so a batch's centers
 # share one small window. Set REACH_WINDOW_KM=0 to disable (route all cells).
 WINDOW_KM = float(os.environ.get("REACH_WINDOW_KM", "150"))
-_T25832 = Transformer.from_crs(4326, 25832, always_xy=True)  # metres, good over DE
+_T25832 = utm32_transformer()
 
 
 def _transit_decompose(centers, cells, dest_erows, evening, bike_hbf_df):

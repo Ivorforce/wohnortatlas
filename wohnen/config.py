@@ -14,6 +14,10 @@ CACHE = RAW / "cache"
 BBOX = (5.8, 47.2, 15.1, 55.1)
 H3_RES = 8
 
+
+def in_bbox(lon, lat):
+    return BBOX[0] <= lon <= BBOX[2] and BBOX[1] <= lat <= BBOX[3]
+
 BIKE_KMH = 15.0  # school runs (kids)
 WALK_KMH = 4.5
 DETOUR_FACTOR = 1.3

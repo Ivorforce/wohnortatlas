@@ -15,7 +15,7 @@ import osmium
 from osmium.filter import EmptyTagFilter
 import pandas as pd
 
-from wohnen.config import BBOX, INTERIM
+from wohnen.config import INTERIM, in_bbox
 
 SRC = INTERIM / "region-filtered.osm.pbf"
 
@@ -61,10 +61,6 @@ TREE_SAMPLE_M = 12.0  # densify natural=tree_row lines into point trees
 # fenced/private woods) — masked out of s_nature's reachable area in 13.
 NOACCESS_NATURAL = {"wood", "scrub", "heath", "grassland", "wetland"}
 NOACCESS_LANDUSE = {"forest", "meadow"}
-
-
-def in_bbox(lon, lat):
-    return BBOX[0] <= lon <= BBOX[2] and BBOX[1] <= lat <= BBOX[3]
 
 
 def green_kind(tags) -> str | None:

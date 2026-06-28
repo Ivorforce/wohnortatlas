@@ -74,18 +74,18 @@ import h3
 import numpy as np
 import pandas as pd
 import rasterio
-from pyproj import Transformer
 from scipy.spatial import cKDTree
 
 from wohnen.config import (BBOX, BIKE_KMH, CELL_RMS_M, DETOUR_FACTOR, INTERIM,
                            LAYERS)
-from wohnen.h3util import disk_weighted_max, disk_weighted_sum
+from wohnen.h3util import (disk_mean, disk_weighted_max, disk_weighted_sum,
+                           utm32_transformer)
 from wohnen.norm import clip01
 
 DEM_S3 = "https://copernicus-dem-30m.s3.amazonaws.com"
 DEM_CROP = INTERIM / "dem_crop.tif"
 DEM_RES = 1 / 1200  # 3 arcsec ≈ 90 m at this latitude? GLO-30 is 1/3600°; we resample
-_T = Transformer.from_crs(4326, 25832, always_xy=True)
+_T = utm32_transformer()
 
 # --- s_nature scoring (anchors in scripts/90_validate.py) ---
 RK, RSCALE = 12, 6.0  # reach DILATE kernel: best reachable nature over grid_disk(12),
@@ -228,16 +228,7 @@ def relief_per_hex(grid: pd.DataFrame) -> pd.Series:
 
     rel = grid["h3"].map(std).fillna(0).values
     # smooth over k=1 disk: "hilly area", not just within-cell variance
-    idx = {c: i for i, c in enumerate(grid["h3"])}
-    sm = rel.copy()
-    cnt = np.ones(len(rel))
-    for i, c in enumerate(grid["h3"]):
-        for nb in h3.grid_ring(c, 1):
-            j = idx.get(nb)
-            if j is not None:
-                sm[i] += rel[j]
-                cnt[i] += 1
-    return pd.Series(sm / cnt, index=grid.index)
+    return pd.Series(disk_mean(rel, grid["h3"]), index=grid.index)
 
 
 def main():

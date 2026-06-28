@@ -23,7 +23,7 @@ import numpy as np
 import osmium
 import pandas as pd
 
-from wohnen.config import BBOX, INTERIM, LAYERS
+from wohnen.config import INTERIM, LAYERS, in_bbox
 from wohnen.h3util import disk_weighted_sum, points_to_cells
 
 # Heritage objects split into THREE streams by what they DO to a townscape, not
@@ -53,10 +53,6 @@ STRUCT_W = {
 ART_W = 1.0                          # artwork + monument
 ART_MEMORIAL_W = 0.5                 # statue / sculpture / bust / obelisk / ...
 ART_MEMORIAL = {"statue", "sculpture", "bust", "obelisk", "land_art"}
-
-
-def in_bbox(lon, lat):
-    return BBOX[0] <= lon <= BBOX[2] and BBOX[1] <= lat <= BBOX[3]
 
 
 class OsmHeritage(osmium.SimpleHandler):
