@@ -343,3 +343,20 @@ Deno.test("seedModes: city→ÖPNV, country→car, edge resolves by household", 
   assert(seedModes("familie", "stadtrand").car === "gern", "Familie@Stadtrand → Auto gern");
   assert(seedModes("single", "stadtrand").oepnv === "gern", "Single@Stadtrand → ÖPNV gern");
 });
+
+// Each client-side layer is pushed onto LAYERS with a LITERAL default weight; that
+// weight is what scores a cell before the onboarding gate applies PRESET_BASE (first
+// render, and a cancelled-gate session). It MUST equal PRESET_BASE[key] — a mismatch
+// silently weights a layer wrong outside the gate (the s_freizeit 1.0-vs-0.4 drift).
+Deno.test("LAYERS literal default weights match PRESET_BASE", () => {
+  const re = /key:\s*"(s_\w+)",\s*label:[^\n]*?weight:\s*([0-9.]+)/g;
+  let m, n = 0;
+  while ((m = re.exec(html))) {
+    const [, key, w] = m;
+    assert(key in PRESET_BASE, `LAYERS ${key} has a literal weight but no PRESET_BASE entry`);
+    assert(Math.abs(parseFloat(w) - PRESET_BASE[key]) < 1e-9,
+      `LAYERS ${key} default weight ${w} != PRESET_BASE ${PRESET_BASE[key]}`);
+    n++;
+  }
+  assert(n >= 6, `expected >=6 client-layer weight literals, found ${n}`);
+});

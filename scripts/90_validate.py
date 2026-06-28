@@ -81,6 +81,18 @@ def main():
     def v(col, lat, lon):
         return float(sc.loc[cell(lat, lon), col])
 
+    pop_arr = sc["population"].fillna(0).to_numpy()
+    inhab = pop_arr >= 10
+
+    def wmed(col):
+        """Population-weighted median of an inhabited-cell column (rural cell-count
+        dilution would otherwise drag a national anchor below the lived value)."""
+        x = sc[col].to_numpy()
+        m = inhab & np.isfinite(x)
+        o = np.argsort(x[m])
+        xs, w = x[m][o], pop_arr[m][o]
+        return float(xs[np.searchsorted(np.cumsum(w), w.sum() / 2)])
+
     print("== rent (calibrated asking, €/m²) ==")
     # € bounds calibrated at the INKAR uplift level, ~10 % above the Homeday
     # level (which level is right is unresolved;
@@ -96,6 +108,13 @@ def main():
         vals = [sc.loc[c, "rent_cal"] for c in cells if c in sc.index]
         check(f"{name} neighborhood spread (max-min)",
               max(vals) - min(vals), 0, 7, " €")
+    # national distribution guard: a source/uplift regression that shifts the whole
+    # surface or punches NaN/zero holes shows here. Pop-weighted to the lived level.
+    check("rent national pop-wt median (real Angebotsmieten)", wmed("rent_cal"), 8.5, 11.0, " €")
+    rc = sc["rent_cal"].to_numpy()
+    check("rent: inhabited cells plausibly priced (>=4 €/m²)",
+          float((rc[inhab] >= 4).mean()), 0.999, 1.0)
+    check("rent: no NaN/implausible-high (0 < max < 30)", float(np.nanmax(rc)), 15, 30, " €")
 
     print("== noise (0-1) ==")
     # airport_penalty is official END aircraft Lden (LfU flughaefen WMS),
@@ -110,6 +129,16 @@ def main():
     check("Freising Altstadt no airport", v("airport_penalty", 48.4028, 11.7489), 0, 0.10)
     check("Schwaig S of runway affected", v("airport_penalty", 48.3475, 11.8000), 0.2, 0.9)
     check("rural quiet", v("noise_penalty", 48.3107, 11.9962), 0, 0.35)
+    # rail noise must reach the SOUTH, not just the north. The EBA WFS caps a single
+    # query at ~740k features and silently truncates a national bbox to its northern
+    # band, so 08_noise tiles the fetch spatially. Guard: southern trackside cells
+    # carry rail at a rate comparable to the north (a regression zeroes the south).
+    rp, lat = sc["rail_penalty"].to_numpy(), sc["lat"].to_numpy()
+    north, south = (lat >= 50.64) & np.isfinite(rp), (lat < 50.64) & np.isfinite(rp)
+    fr_n, fr_s = (rp[north] > 0).mean(), (rp[south] > 0).mean()
+    check("rail noise reaches southern Germany (south/north coverage ratio)",
+          float(fr_s / fr_n) if fr_n else 0.0, 0.5, 2.0)
+    check("München Hbf carries rail noise", v("rail_penalty", 48.140, 11.558), 0.2, 1.0)
 
     print("== nature (crowding-discounted) ==")
     # bands shifted down 2026: s_nature re-anchored above its universal floor (13_nature
@@ -248,6 +277,11 @@ def main():
           v("s_vacancy", 48.2107, 11.5616), 0.85, 1.0)
     check("rural no-data neutral (Bockhorn)",
           v("s_vacancy", 48.3000, 11.9700), 0.99, 1.0)
+    # national covered-cell distribution must match Germany's real ~4.8 % median /
+    # ~6.3 % mean (the 1km read); a regression to the noisy 100m grid blows this up.
+    vc = sc["vacancy_pct"].dropna()
+    check("vacancy covered median (~Germany 4.8 %)", float(vc.median()), 3.5, 6.5, " %")
+    check("vacancy covered mean (~Germany 6.3 %)", float(vc.mean()), 5.0, 8.0, " %")
 
     print("== climate (DWD 1991-2020) ==")
     check("Alpenrand wet (Miesbach)", v("rain_mm", 47.789, 11.834), 1200, 1800)
@@ -261,6 +295,32 @@ def main():
     # semi-arid (impossible in Germany -> corruption); above ~25 would mean the
     # drought grid isn't being read / over-smoothed away.
     check("dry-aridity floor in Trockengebiet", float(sc["martonne"].min()), 18, 25)
+
+    print("== broadband (BNetzA Breitbandatlas) ==")
+    # availability is a monotone ladder: every gigabit/fibre hex is also a >=100 Mbit
+    # hex. A violation means the rung columns got mismatched (the old find("250") class).
+    s100, s1000 = sc["share_100"].to_numpy(), sc["share_1000"].to_numpy()
+    check("broadband ladder monotone (share_1000 <= share_100)",
+          int(np.nansum(s1000 > s100 + 1e-9)), 0, 0)
+    check("broadband national pop-wt median (coverage, not all-0)", wmed("bb_score"), 0.45, 0.95)
+
+    print("== age / life-stage (Zensus 1km shares) ==")
+    # the senioren membership anchor must straddle the national median 65+ share, else
+    # the typical cell scores far off the intended ~0.5 (the Munich-era 0.13/0.27 drift
+    # read the median cell at 0.72). Cross-checks the web anchor against the data.
+    med65 = wmed("share_65plus")
+    check("national 65+ share (~Zensus 22 %)", med65, 0.20, 0.25)
+    import re as _re
+    html_path = Path(__file__).resolve().parent.parent / "web" / "index.html"
+    am = _re.search(r"senioren:.*?smoothstep\(s,\s*([0-9.]+),\s*([0-9.]+)\)",
+                    html_path.read_text(), _re.S)
+    if am:
+        mid = (float(am.group(1)) + float(am.group(2))) / 2
+        check("senioren web anchor midpoint brackets national median",
+              abs(mid - med65), 0.0, 0.03)
+    else:
+        print("WARN senioren anchor not found in index.html")
+        FAILED.append("senioren anchor regex")
 
     print("== structure ==")
     pop = sc["population"].fillna(0)
