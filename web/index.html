@@ -1900,13 +1900,16 @@ let ageNbrOff = null, ageNbrIdx = null, ageNbrPopW = null;   // ring-1 adjacency
 // callbacks: until it lands, recomputeAge ships the un-spread rawAge; when it lands, it
 // re-scores (now with spread) and re-renders once. Age weight is low (0.3), so the
 // brief pre-spread frame is barely visible.
+// rIC shim for the incremental idle builders below (neighbour graphs, peak dots).
+const idleCb = window.requestIdleCallback
+  ? (cb, timeout = 500) => requestIdleCallback(cb, { timeout })
+  : cb => setTimeout(cb, 0);
+
 let ageNbrBuilding = false;
 function startAgeNbrBuild() {
   if (ageNbrOff || ageNbrBuilding) return;
   ageNbrBuilding = true;
   const ei = [], ej = [], popW = new Float32Array(N), pop = CELLS.raw.population;
-  const idle = window.requestIdleCallback ? cb => window.requestIdleCallback(cb, { timeout: 500 })
-                                          : cb => setTimeout(cb, 0);
   // SCATTER, not gather: an empty hex contributes 0 to the max-spread (popW 0), so
   // only populated cells (~25 %) can lift a neighbour. Walk those, gridDisk each, and
   // record it as a populated neighbour of each ring cell. ~2.7× fewer gridDisk calls,
@@ -1925,7 +1928,7 @@ function startAgeNbrBuild() {
         if (i != null && i !== j) { ei.push(i); ej.push(j); }   // edge: cell i ← populated neighbour j
       }
     }
-    if (j < N) { idle(step); return; }
+    if (j < N) { idleCb(step); return; }
     // flatten the scattered edges into CSR (idx[off[i]..off[i+1]) = populated neighbours of
     // i), dropping the array-of-arrays — a few big typed arrays instead of ~940k tiny ones.
     const M = ei.length, off = new Uint32Array(N + 1);
@@ -1937,7 +1940,7 @@ function startAgeNbrBuild() {
     recomputeAge();   // re-score WITH the proximity spread …
     update();         // … and re-render the refined age layer once
   };
-  idle(step);
+  idleCb(step);
 }
 function recomputeAge() {
   Ldirty.add("s_age");
@@ -2407,7 +2410,7 @@ function recomputeFreizeit() {
   // foot is the always-on baseline (everyone walks, no toggle, no discount) — what was
   // bike's old role, now a REAL walk surface (04e reach_*_foot), so a bike-/car-/transit-
   // less profile keeps a local walkability gradient instead of going flat.
-  const bestMode = (a, i) => Math.max(a.f?.[i] ?? 0, (a.b?.[i] ?? 0) * dB, (a.t?.[i] ?? 0) * dT, (a.c?.[i] ?? 0) * dC);
+  const bestSurface = (a, i) => Math.max(a.f?.[i] ?? 0, (a.b?.[i] ?? 0) * dB, (a.t?.[i] ?? 0) * dT, (a.c?.[i] ?? 0) * dC);
   const base = { t: CELLS.raw[FREIZEIT_BASE.cols.transit], b: CELLS.raw[FREIZEIT_BASE.cols.bike],
                  f: CELLS.raw[FREIZEIT_BASE.cols.foot], c: CELLS.raw[FREIZEIT_BASE.cols.car] };
   const sel = FREIZEIT_SOURCES.filter(s => FREIZEIT_PREF[s.key] === "on");
@@ -2421,12 +2424,12 @@ function recomputeFreizeit() {
   }));
   const af = FREIZEIT_FLOOR, span = 1 - af;  // band re-anchor: all terms at floor → 0 (cf. recomputeAccess)
   for (let i = 0; i < N; i++) {
-    const bv = bestMode(base, i);
+    const bv = bestSurface(base, i);
     let wsum = baseW, lsum = baseW * Math.log(frzTerm(bv, FREIZEIT_BASE.gamma));
     let pass = 1;
     if (angebot && bv < FREIZEIT_VETO_EPS) pass = 0;  // baseline vetoes ONLY when explicitly checked
     for (const a of arr) {
-      const v = bestMode(a, i);            // best discounted mode surface — feeds BOTH score + veto
+      const v = bestSurface(a, i);         // best discounted mode surface — feeds BOTH score + veto
       if (v < FREIZEIT_VETO_EPS) pass = 0; // ticked source genuinely unreachable → veto the cell
       lsum += a.w * Math.log(frzTerm(v, a.g)); wsum += a.w;
     }
@@ -2436,7 +2439,7 @@ function recomputeFreizeit() {
 }
 // ticked leisure sources unreachable at cell i, by label — for the hide-filter reason list
 // (per-hover, so it re-derives the best-mode surface rather than caching 6 arrays). Mirrors
-// recomputeFreizeit's bestMode + FREIZEIT_VETO_EPS — keep the two in sync.
+// recomputeFreizeit's bestSurface + FREIZEIT_VETO_EPS — keep the two in sync.
 function freizeitMisses(i) {
   const dB = freizeitDisc(MODE_PREF.bike), dT = freizeitDisc(OEPNV_PREF), dC = freizeitDisc(MODE_PREF.car);
   const R = CELLS.raw, out = [];
@@ -3184,7 +3187,7 @@ function freizeitRowVisible(c) {
   return !src || FREIZEIT_PREF[src] === "on";
 }
 // s_freizeit ships only the bike col as the breakdown row, but the SCORE takes the best of
-// all four modes (recomputeFreizeit's bestMode). Map each shipped row -> its 4 mode cols so
+// all four modes (recomputeFreizeit's bestSurface). Map each shipped row -> its 4 mode cols so
 // the breakdown can show that same best-mode value (+ which mode won) instead of the bike-only
 // surface — which reads ~0% on cells a car/ÖPNV mode actually carries into the layer score.
 const FREIZEIT_ROW_MODES = (() => {
@@ -3192,7 +3195,7 @@ const FREIZEIT_ROW_MODES = (() => {
   for (const s of FREIZEIT_SOURCES) m[s.cols.bike] = s.cols;
   return m;
 })();
-// best discounted mode for a freizeit row at the cursor -> { v, mode }; mirrors bestMode in
+// best discounted mode for a freizeit row at the cursor -> { v, mode }; mirrors bestSurface in
 // recomputeFreizeit (foot always full, others scaled by the transport picker discount), so the
 // breakdown number and the layer score agree.
 function freizeitBestMode(cols, acc) {
@@ -3927,8 +3930,6 @@ function startPeakNbrBuild(then) {
   const pop = CELLS.raw.population, H = CELLS.h3, idx = h3idx();
   const nbFlat = [], r1Flat = [], has = new Uint8Array(N);
   const nbOff = new Uint32Array(N + 1), r1Off = new Uint32Array(N + 1);
-  const idle = window.requestIdleCallback ? cb => window.requestIdleCallback(cb, { timeout: 500 })
-                                          : cb => setTimeout(cb, 0);
   let i = 0;
   const step = () => {
     const end = Math.min(N, i + 25000);
@@ -3944,13 +3945,13 @@ function startPeakNbrBuild(then) {
       nbOff[i + 1] = nbFlat.length;       // i ascends contiguously → CSR offsets fill in order
       r1Off[i + 1] = r1Flat.length;
     }
-    if (i < N) { idle(step); return; }
+    if (i < N) { idleCb(step); return; }
     peakNbOff = nbOff; peakNbIdx = Int32Array.from(nbFlat);
     peakR1Off = r1Off; peakR1Idx = Int32Array.from(r1Flat);
     peakHas = has; peakReady = true; peakNbrBuilding = false;
     for (const cb of peakNbrPending.splice(0)) cb?.();
   };
-  idle(step);
+  idleCb(step);
 }
 
 // peaks: local maxima of valueAt over eligible+populated cells, each with a dominance
@@ -4046,9 +4047,7 @@ function buildPeaksNow() {                       // compute peaks (topology read
 function schedulePeaks() {
   if (peaksScheduled || !peaksDirty) return;
   peaksScheduled = true;
-  const idle = window.requestIdleCallback ? cb => window.requestIdleCallback(cb, { timeout: 500 })
-                                          : cb => setTimeout(cb, 0);
-  idle(() => {
+  idleCb(() => {
     peaksScheduled = false;
     if (candsHidden() || !peaksDirty) return;
     if (!peakReady) startPeakNbrBuild(buildPeaksNow);   // chunked topology build, then compute+draw
@@ -4260,8 +4259,6 @@ function startNbrPopBuild() {
   if (_nbrPop || nbrPopBuilding) return;
   nbrPopBuilding = true;
   const sum = new Float32Array(N), pop = CELLS.raw.population;
-  const idle = window.requestIdleCallback ? cb => window.requestIdleCallback(cb, { timeout: 500 })
-                                          : cb => setTimeout(cb, 0);
   let j = 0, idx = null;
   const step = () => {
     if (!idx) idx = h3idx();
@@ -4274,12 +4271,12 @@ function startNbrPopBuild() {
         if (i != null) sum[i] += p;
       }
     }
-    if (j < N) { idle(step); return; }
+    if (j < N) { idleCb(step); return; }
     _nbrPop = sum; nbrPopBuilding = false;
     _gpuDimVer++;                                  // smoothed pop ready → rebuild dim …
     if (document.getElementById("f_pop").checked) update();  // … and refine the render once
   };
-  idle(step);
+  idleCb(step);
 }
 // memoised full-N dim, mirroring flagFull8. f_pop OFF → all 1.0 (byte-identical render).
 let _dimFull = null, _dimFullVer = -1;
