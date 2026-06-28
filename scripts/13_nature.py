@@ -88,9 +88,14 @@ DEM_RES = 1 / 1200  # 3 arcsec ≈ 90 m at this latitude? GLO-30 is 1/3600°; we
 _T = Transformer.from_crs(4326, 25832, always_xy=True)
 
 # --- s_nature scoring (anchors in scripts/90_validate.py) ---
-RK, RSCALE = 8, 4.0  # reach DILATE kernel: best reachable nature over grid_disk(8),
-#                      exp(-d / 4 km) — gentle, "a comfortable bike outing" (a great
-#                      lake 15 bike-min away is still a fine weekend destination)
+RK, RSCALE = 12, 6.0  # reach DILATE kernel: best reachable nature over grid_disk(12),
+#                      exp(-d / 6 km) — "a comfortable weekend/evening bike outing". The
+#                      weight halves at ~4 km (~23 bike-min) and the hard cutoff is
+#                      ~11 km (~60 bike-min, ring 12): a great spot an hour out still
+#                      counts but at ~16 %, so a forest 10 min away decisively wins.
+#                      CROWD_HALF + NATURE_FLOOR/TOP below are seated for THIS kernel —
+#                      retune all three together (the load magnitude and the base-score
+#                      distribution both scale with the kernel; see scripts/90_validate).
 W = {  # monotype ceiling: score if your reach were purely this best-eligible type.
     # river/stream are NOT here — they are capped bonuses (RIVER_BONUS/STREAM_BONUS),
     # not best-eligible, so the surroundings always decide a riverside hex.
@@ -131,7 +136,10 @@ BETA = 0.35        # diversity temper on the non-best types (lower → leans tow
 # → 100." Monotone, so the good distribution and the relative anchors
 # (Herrsching>Schwabing, Geretsried>=Schwabing) survive; the absolute bands in
 # 90_validate.py track it. NATURE_TOP ~ p99.5 of base so the genuine top ~0.5% saturates.
-NATURE_FLOOR, NATURE_TOP = 0.20, 0.89
+# Seated for the RK12/RSCALE6 kernel: the wider reach lifts the base floor (more cells
+# reach *some* good nature), so FLOOR rises with it to keep the final distribution — and
+# the 90_validate anchors — stable. Picked to match the prior kernel's score percentiles.
+NATURE_FLOOR, NATURE_TOP = 0.36, 0.90
 GAMMA = 1.4        # final contrast: AFTER the rescale, pull the (now thin) bottom band
 #                    further toward 0 so the worst rural-Augsburg/Munich-centre cells
 #                    genuinely zero out, without reordering
@@ -146,11 +154,11 @@ RIVER_BONUS, STREAM_BONUS = 0.30, 0.12
 # (a concrete channel is not an outing, however quiet the neighbourhood).
 BANK_FULL, BANK_BUILT = 0.50, 1.0
 # crowd LOAD = pop SUM over the reach kernel (not catchment_wide); CROWD_HALF
-# re-seated for that magnitude. Discount bottoms at 1-MAX, never negates.
-# Strong + early-biting (was .55/300k): dense Munich green (Isar/Nymphenburg/EG,
-# load ~375k) is a crowded outing, not tranquil nature — the city's reach-load is
-# ~30x Herrsching's (~12k), so this hits the city hard and the countryside barely.
-CROWD_MAX, CROWD_HALF = 0.58, 220_000
+# re-seated for that magnitude — it scales with the kernel (RK12/RSCALE6's load runs
+# ~2.4x the old RK8/RSCALE4 load), so CROWD_HALF tracks it to keep the SAME relative
+# discount (dense Munich green a crowded outing, the countryside barely touched).
+# Discount bottoms at 1-MAX, never negates.
+CROWD_MAX, CROWD_HALF = 0.58, 540_000
 NOISE_BITE = 0.38  # a fully-noisy reachable area (Lden>=70) keeps 1-BITE of its value
 #                    (was .30): a traffic-lined riverbank/park is a louder outing
 
